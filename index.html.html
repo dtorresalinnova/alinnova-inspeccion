@@ -151,15 +151,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
       <div class="slbl">Fecha de inspeccion</div>
       <input type="date" class="finput" id="f-fecha">
       <div class="slbl" style="margin-top:16px">Analista responsable</div>
-      <div class="arow" id="analistas-grid">
-        <button class="abtn" id="btn-Angela" onclick="selA('Angela')"><div class="av">AN</div>Angela</button>
-        <button class="abtn" id="btn-Felipe" onclick="selA('Felipe')"><div class="av">FE</div>Felipe</button>
-        <button class="abtn" id="btn-Fabian" onclick="selA('Fabian')"><div class="av">FA</div>Fabian</button>
-        <button class="abtn" id="btn-David" onclick="selA('David')"><div class="av">DV</div>David</button>
-        <button class="abtn" id="btn-JuanCamilo" onclick="selA('Juan Camilo')"><div class="av">JC</div>Juan Camilo</button>
-        <button class="abtn" id="btn-Daniel" onclick="selA('Daniel')"><div class="av">DN</div>Daniel</button>
-        <button class="abtn" id="btn-Giorgio" onclick="selA('Giorgio')"><div class="av">GI</div>Giorgio</button>
-      </div>
+      <select class="finput" id="sel-analista" onchange="selA(this.value)" style="margin-top:8px">
+        <option value="">-- Seleccionar analista --</option>
+        <option value="Angela">Angela</option>
+        <option value="Felipe">Felipe</option>
+        <option value="Fabian">Fabian</option>
+        <option value="David">David</option>
+        <option value="Juan Camilo">Juan Camilo</option>
+        <option value="Daniel">Daniel</option>
+        <option value="Giorgio">Giorgio</option>
+      </select>
     </div>
     <div class="slbl">Linea de produccion</div>
     <div id="lineas-list"></div>
@@ -438,17 +439,8 @@ function irZonas() {
 function irDash() { renderDash(); showS('s-dash'); }
 
 /* ---- INICIO ---- */
-var ANALISTAS = ['Angela','Felipe','Fabian','David','Juan Camilo','Daniel','Giorgio'];
 function selA(nombre) {
   ST.analista = nombre;
-  for (var i = 0; i < ANALISTAS.length; i++) {
-    var id = 'btn-' + ANALISTAS[i].replace(' ','');
-    var el = document.getElementById(id);
-    if (el) el.classList.remove('sel');
-  }
-  var selId = 'btn-' + nombre.replace(' ','');
-  var selEl = document.getElementById(selId);
-  if (selEl) selEl.classList.add('sel');
 }
 
 function renderLineas() {
