@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alinnova">
+<meta name="theme-color" content="#085041">
+<title>Alinnova Inspeccion</title>
+<style>
+*{-webkit-box-sizing:border-box;box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#F1EFE8}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior:none}
+#app{max-width:480px;margin:0 auto;min-height:100%;background:#F1EFE8}
+.screen{display:none}.screen.active{display:block}
+.topbar{background:#085041;padding:14px 16px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px;position:-webkit-sticky;position:sticky;top:0;z-index:10}
+.tbback{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:22px;cursor:pointer;-webkit-appearance:none;font-family:inherit;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;flex-shrink:0}
+.tbinfo{flex:1;min-width:0}
+.tbtitle{font-size:16px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbsub{font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px}
+.tbact{background:rgba(255,255,255,0.18);border:none;color:#fff;padding:9px 15px;border-radius:20px;font-size:13px;cursor:pointer;font-weight:500;font-family:inherit;-webkit-appearance:none;flex-shrink:0}
+.hero{background:#085041;padding:0 16px 32px;text-align:center}
+.herorow{display:-webkit-flex;display:flex;-webkit-justify-content:flex-end;justify-content:flex-end;padding:14px 0 10px}
+.heroico{width:72px;height:72px;border-radius:22px;background:rgba(255,255,255,0.15);margin:0 auto 16px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center}
+.herotitle{font-size:22px;font-weight:700;color:#fff}
+.herosub{font-size:14px;color:rgba(255,255,255,0.65);margin-top:5px}
+.bp{padding:16px}
+.slbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#5F5E5A;margin-bottom:10px}
+.card{background:#fff;border-radius:18px;border:1px solid rgba(0,0,0,0.07);padding:18px;margin-bottom:14px}
+.finput{width:100%;padding:12px 14px;border:1.5px solid #D3D1C7;border-radius:12px;font-size:15px;background:#F1EFE8;color:#2C2C2A;outline:none;-webkit-appearance:none;font-family:inherit;display:block}
+.finput:focus{border-color:#1D9E75}
+.arow{display:-webkit-flex;display:flex;gap:10px;margin-top:14px}
+.abtn{-webkit-flex:1;flex:1;padding:18px 8px;border:1.5px solid #D3D1C7;border-radius:14px;font-size:15px;cursor:pointer;background:#F1EFE8;color:#2C2C2A;text-align:center;-webkit-appearance:none;font-family:inherit;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;-webkit-align-items:center;align-items:center}
+.abtn.sel{background:#E1F5EE;border-color:#1D9E75;color:#085041}
+.av{width:46px;height:46px;border-radius:50%;background:#D3D1C7;margin:0 auto 10px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-size:16px;font-weight:600;color:#5F5E5A}
+.abtn.sel .av{background:#9FE1CB;color:#085041}
+.lbtn{width:100%;background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:18px;padding:16px;margin-bottom:10px;cursor:pointer;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:14px;-webkit-appearance:none;font-family:inherit;text-align:left}
+.lbtn:active{background:#E1F5EE}
+.lico{width:52px;height:52px;border-radius:16px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;flex-shrink:0}
+.lname{font-size:15px;font-weight:600;color:#2C2C2A}
+.lsub{font-size:13px;color:#5F5E5A;margin-top:3px}
+.btnm{width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;background:#085041;color:#fff;margin-top:8px;-webkit-appearance:none;font-family:inherit;display:block}
+.btnm:disabled{opacity:0.35}
+.btnm:active{background:#0F6E56}
+.ptrack{height:7px;background:#D3D1C7;border-radius:4px;margin-bottom:6px}
+.pfill{height:7px;background:#1D9E75;border-radius:4px;-webkit-transition:width 0.4s;transition:width 0.4s}
+.plbl{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;font-size:12px;color:#5F5E5A;margin-bottom:16px}
+.zbtn{width:100%;background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:16px;padding:14px 16px;margin-bottom:8px;cursor:pointer;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:12px;-webkit-appearance:none;font-family:inherit;text-align:left}
+.zbtn:active{background:#E1F5EE}
+.zbtn.done{border-color:#1D9E75;background:#E1F5EE}
+.zdot{width:42px;height:42px;border-radius:50%;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;flex-shrink:0;background:#F1EFE8}
+.zbtn.done .zdot{background:#9FE1CB}
+.zname{font-size:15px;font-weight:600;color:#2C2C2A}
+.zbtn.done .zname{color:#085041}
+.zcount{font-size:12px;color:#5F5E5A;margin-top:3px}
+.pcard{background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:16px;padding:16px;margin-bottom:12px}
+.pnum{font-size:11px;font-weight:600;color:#888780;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.ptxt{font-size:15px;font-weight:600;color:#2C2C2A;margin-bottom:14px;line-height:1.4}
+.rrow{display:-webkit-flex;display:flex;gap:8px;-webkit-flex-wrap:wrap;flex-wrap:wrap}
+.rbtn{-webkit-flex:1;flex:1;min-width:80px;padding:13px 8px;border:1.5px solid #D3D1C7;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;background:#F1EFE8;color:#2C2C2A;text-align:center;-webkit-appearance:none;font-family:inherit}
+.rbtn:active{opacity:0.75}
+.rbtn.ok.sel{background:#E1F5EE;border-color:#1D9E75;color:#085041;font-weight:600}
+.rbtn.nok.sel{background:#FCEBEB;border-color:#E24B4A;color:#791F1F;font-weight:600}
+.rbtn.na.sel{background:#D3D1C7;border-color:#888780;color:#2C2C2A;font-weight:600}
+.rbtn.en.sel{background:#E6F1FB;border-color:#378ADD;color:#0C447C;font-weight:600}
+.rbtn.en{text-align:left;padding:14px 16px;min-width:0;width:100%;-webkit-flex:none;flex:none}
+.twrap{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;border:1.5px solid #D3D1C7;border-radius:14px;background:#F1EFE8;overflow:hidden}
+.twrap.filled{border-color:#1D9E75;background:#E1F5EE}
+.tbtn{width:60px;height:58px;border:none;background:transparent;font-size:30px;cursor:pointer;color:#085041;font-weight:300;flex-shrink:0;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-family:inherit;-webkit-appearance:none}
+.tbtn:active{background:rgba(8,80,65,0.12)}
+.tval{-webkit-flex:1;flex:1;text-align:center;font-size:24px;font-weight:700;color:#2C2C2A;padding:0 4px}
+.tunit{font-size:14px;color:#5F5E5A;padding-right:16px;font-weight:500}
+.tabbar{display:-webkit-flex;display:flex;background:#D3D1C7;border-radius:14px;padding:4px;margin-bottom:16px;gap:3px}
+.tabbtn{-webkit-flex:1;flex:1;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:#5F5E5A;-webkit-appearance:none;font-family:inherit}
+.tabbtn.act{background:#fff;color:#2C2C2A;font-weight:600}
+.tabp{display:none}.tabp.act{display:block}
+.sgrid{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.sbox{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,0.07);padding:16px;width:calc(50% - 5px)}
+.slb{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#888780;margin-bottom:8px}
+.sv{font-size:28px;font-weight:700;color:#2C2C2A}
+.sv.g{color:#085041}.sv.r{color:#A32D2D}
+.rcard{background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:16px;padding:16px;margin-bottom:10px}
+.rtop{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:10px;gap:8px}
+.rfecha{font-size:15px;font-weight:600;color:#2C2C2A}
+.rhora{font-size:12px;color:#888780;margin-top:3px}
+.rpill{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:#E1F5EE;color:#085041;white-space:nowrap;flex-shrink:0}
+.rstats{display:-webkit-flex;display:flex;gap:16px;font-size:13px}
+.rok{color:#0F6E56;font-weight:600}.rnok{color:#A32D2D;font-weight:600}
+.bexp{width:100%;padding:16px;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;background:#085041;color:#fff;margin-bottom:10px;-webkit-appearance:none;font-family:inherit;display:block}
+.bclr{width:100%;padding:16px;border:1.5px solid #F09595;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;background:transparent;color:#A32D2D;-webkit-appearance:none;font-family:inherit;display:block}
+.tipbox{background:#E1F5EE;border-radius:14px;padding:14px 16px;font-size:13px;color:#085041;line-height:1.6;margin-top:4px}
+.empty{text-align:center;padding:56px 20px}
+.etxt{font-size:14px;line-height:1.6;margin-top:14px;color:#5F5E5A}
+.toast{position:fixed;bottom:30px;left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%);background:#085041;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:500;z-index:999;opacity:0;-webkit-transition:opacity 0.3s;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.loading{text-align:center;padding:40px 20px;color:#5F5E5A;font-size:14px}
+.spinner{width:32px;height:32px;border:3px solid #D3D1C7;border-top-color:#085041;border-radius:50%;-webkit-animation:spin 0.8s linear infinite;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+@-webkit-keyframes spin{to{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}
+@keyframes spin{to{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="s-inicio" class="screen active">
+  <div class="hero">
+    <div class="herorow">
+      <button class="tbact" onclick="irDash()">Ver registros</button>
+    </div>
+    <div class="heroico">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <rect x="4" y="9" width="26" height="21" rx="3" fill="rgba(255,255,255,0.9)"/>
+        <rect x="11" y="4" width="14" height="7" rx="2" fill="rgba(255,255,255,0.7)"/>
+        <rect x="8" y="16" width="8" height="2.5" rx="1" fill="#085041"/>
+        <rect x="8" y="21" width="12" height="2.5" rx="1" fill="#085041"/>
+        <rect x="8" y="26" width="9" height="2.5" rx="1" fill="#085041"/>
+        <circle cx="26" cy="24" r="6" fill="#1D9E75"/>
+        <path d="M23 24l2 2 4-4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="herotitle">Ruta de Inspeccion</div>
+    <div class="herosub">Alinnova - Control de Calidad</div>
+  </div>
+  <div class="bp">
+    <div class="card">
+      <div class="slbl">Fecha de inspeccion</div>
+      <input type="date" class="finput" id="f-fecha">
+      <div class="slbl" style="margin-top:16px">Analista responsable</div>
+      <div class="arow">
+        <button class="abtn" id="btn-A" onclick="selA('Angela')">
+          <div class="av">AN</div>Angela
+        </button>
+        <button class="abtn" id="btn-F" onclick="selA('Felipe')">
+          <div class="av">FE</div>Felipe
+        </button>
+      </div>
+    </div>
+    <div class="slbl">Linea de produccion</div>
+    <div id="lineas-list"></div>
+  </div>
+</div>
+
+<div id="s-zonas" class="screen">
+  <div class="topbar">
+    <button class="tbback" onclick="irInicio()">&#8249;</button>
+    <div class="tbinfo">
+      <div class="tbtitle" id="z-tit">Linea</div>
+      <div class="tbsub" id="z-sub">0 zonas</div>
+    </div>
+  </div>
+  <div class="bp">
+    <div class="ptrack"><div class="pfill" id="z-pfill" style="width:0%"></div></div>
+    <div class="plbl"><span id="z-plbl">Progreso</span><span id="z-ppct">0%</span></div>
+    <div id="zonas-list"></div>
+    <button class="btnm" id="btn-fin" onclick="finLinea()" disabled>Finalizar y guardar linea</button>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+<div id="s-pregs" class="screen">
+  <div class="topbar">
+    <button class="tbback" onclick="irZonas()">&#8249;</button>
+    <div class="tbinfo">
+      <div class="tbtitle" id="p-tit">Zona</div>
+      <div class="tbsub" id="p-sub">Linea</div>
+    </div>
+  </div>
+  <div class="bp">
+    <div id="pregs-body"></div>
+    <button class="btnm" onclick="guardarZona()">Guardar zona</button>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<div id="s-dash" class="screen">
+  <div class="topbar">
+    <button class="tbback" onclick="irInicio()">&#8249;</button>
+    <div class="tbinfo">
+      <div class="tbtitle">Dashboard</div>
+      <div class="tbsub">Registros en tiempo real</div>
+    </div>
+  </div>
+  <div class="bp">
+    <div class="tabbar">
+      <button class="tabbtn act" id="tb-res" onclick="cambTab('res')">Resumen</button>
+      <button class="tabbtn" id="tb-reg" onclick="cambTab('reg')">Historial</button>
+      <button class="tabbtn" id="tb-exp" onclick="cambTab('exp')">Exportar</button>
+    </div>
+    <div id="tp-res" class="tabp act"></div>
+    <div id="tp-reg" class="tabp"></div>
+    <div id="tp-exp" class="tabp"></div>
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---- SUPABASE CONFIG ---- */
+var SUPA_URL = 'https://dyfjcmglvjnebszjegdr.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5ZmpjbWdsdmpuZWJzemplZ2RyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMjI2NzcsImV4cCI6MjA5MzY5ODY3N30.fsDHqsQEyKOWzdEHtHA21gWpr7shrrP-v1BxNv5FzOE';
+
+function supaFetch(endpoint, method, body) {
+  var opts = {
+    method: method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Prefer': 'return=minimal'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(SUPA_URL + '/rest/v1/' + endpoint, opts);
+}
+
+function insertarRegistros(rows) {
+  return supaFetch('registros', 'POST', rows);
+}
+
+function obtenerRegistros() {
+  return supaFetch('registros?order=created_at.desc&limit=500', 'GET');
+}
+
+/* ---- DATOS ---- */
+var LINEAS = [
+  {id:'g', nombre:'Gastronomia', color:'#E1F5EE', ci:'#085041',
+   zonas:[
+    {id:'recibo', nombre:'Zona de recibo', preguntas:[
+      {t:'Limpieza y desinfeccion general', tipo:'c'},
+      {t:'Filtro sanitario con desinfectante y jabones?', tipo:'c'},
+      {t:'Trampas de roedores libres?', tipo:'c'}
+    ]},
+    {id:'cfpt', nombre:'CF PT Gastronomia', preguntas:[
+      {t:'Hay productos sin rotular?', tipo:'c'},
+      {t:'Hay productos vencidos?', tipo:'c'},
+      {t:'Hay espacio entre canastillas y pared?', tipo:'c'},
+      {t:'Temperatura del cuarto', tipo:'n'}
+    ]},
+    {id:'emp', nombre:'Cuarto de empacado', preguntas:[
+      {t:'Temperatura del cuarto', tipo:'n'},
+      {t:'Limpieza y desinfeccion general', tipo:'c'},
+      {t:'Cuchillas de las desmechadoras completas?', tipo:'c'},
+      {t:'Tajadora completa sin partes rotas?', tipo:'c'},
+      {t:'Que producto estan empacando?', tipo:'e', ops:['Garbanzo','Frijol','Pollo desmechado','Cerdo desmechado','Res desmechada','Pernil de cerdo','Patacon']},
+      {t:'Utensilios corresponden al color estipulado?', tipo:'c'},
+      {t:'El gramaje del producto terminado cumple?', tipo:'c'}
+    ]},
+    {id:'hor', nombre:'Zona de Horneo', preguntas:[
+      {t:'Limpieza y desinfeccion general', tipo:'c'}
+    ]},
+    {id:'pre', nombre:'Zona de prealistamiento', preguntas:[
+      {t:'Limpieza y desinfeccion general', tipo:'c'},
+      {t:'Cuchillos y utensilios sin danos?', tipo:'c'},
+      {t:'Utensilios corresponden al color estipulado?', tipo:'c'}
+    ]},
+    {id:'cfprot', nombre:'CF Proteinas Crudas', preguntas:[
+      {t:'Temperatura del cuarto', tipo:'n'},
+      {t:'Hay productos sin rotular?', tipo:'c'},
+      {t:'Hay productos vencidos?', tipo:'c'}
+    ]},
+    {id:'bpmg', nombre:'BPM Operarios', preguntas:[
+      {t:'Cuenta con uniforme adecuado?', tipo:'c'},
+      {t:'Cuenta con unas en buen estado?', tipo:'c'},
+      {t:'Estan sin maquillaje?', tipo:'c'}
+    ]}
+  ]},
+  {id:'e', nombre:'Ensamble y Refrigerios', color:'#E6F1FB', ci:'#0C447C',
+   zonas:[
+    {id:'cfptr', nombre:'CF PT Refrigerios', preguntas:[
+      {t:'Hay productos sin rotular?', tipo:'c'},
+      {t:'Hay productos vencidos?', tipo:'c'},
+      {t:'Hay espacio entre canastillas y pared?', tipo:'c'},
+      {t:'Temperatura del cuarto', tipo:'n'}
+    ]},
+    {id:'banda', nombre:'Banda de ensamble', preguntas:[
+      {t:'Temperatura del cuarto', tipo:'n'},
+      {t:'Limpieza y desinfeccion general', tipo:'c'},
+      {t:'Utensilios en buen estado?', tipo:'c'},
+      {t:'Que producto se esta ensamblando?', tipo:'e', ops:['Rollo de pollo','Wrap de pollo','Sanduche de cerdo','Sanduche de queso','Sanduche de pernil','SED Rollo de pollo','SED Rollo de queso']}
+    ]},
+    {id:'cfmpr', nombre:'CF MP Refrigerios', preguntas:[
+      {t:'Hay productos sin rotular?', tipo:'c'},
+      {t:'Hay productos vencidos?', tipo:'c'},
+      {t:'Hay espacio entre canastillas y pared?', tipo:'c'},
+      {t:'Temperatura del cuarto', tipo:'n'}
+    ]},
+    {id:'seco', nombre:'Almacenamiento en Seco', preguntas:[
+      {t:'Hay productos sin rotular?', tipo:'c'},
+      {t:'Hay productos vencidos?', tipo:'c'},
+      {t:'Hay espacio entre canastillas y pared?', tipo:'c'}
+    ]},
+    {id:'contra', nombre:'CF de Contramuestras', preguntas:[
+      {t:'Hay productos sin rotular?', tipo:'c'},
+      {t:'Hay productos vencidos?', tipo:'c'},
+      {t:'Hay espacio entre canastillas y pared?', tipo:'c'},
+      {t:'Temperatura del cuarto', tipo:'n'}
+    ]},
+    {id:'bpme', nombre:'BPM Operarios', preguntas:[
+      {t:'Cuenta con uniforme adecuado?', tipo:'c'},
+      {t:'Cuenta con unas en buen estado?', tipo:'c'},
+      {t:'Estan sin maquillaje?', tipo:'c'}
+    ]}
+  ]},
+  {id:'p', nombre:'Panaderia', color:'#FAEEDA', ci:'#633806',
+   zonas:[
+    {id:'recibop', nombre:'Zona de recibo', preguntas:[
+      {t:'Limpieza y desinfeccion general', tipo:'c'},
+      {t:'Filtro sanitario con desinfectante y jabones?', tipo:'c'},
+      {t:'Trampas de roedores libres?', tipo:'c'}
+    ]},
+    {id:'lavado', nombre:'Cuarto lavado de canastillas', preguntas:[
+      {t:'Limpieza y desinfeccion general', tipo:'c'}
+    ]},
+    {id:'mpseca', nombre:'Cuarto de MP Seca', preguntas:[
+      {t:'Hay productos sin rotular?', tipo:'c'},
+      {t:'Hay productos vencidos?', tipo:'c'},
+      {t:'Hay espacio entre canastillas y pared?', tipo:'c'}
+    ]},
+    {id:'cfmpp', nombre:'Cuarto Frio MP', preguntas:[
+      {t:'Temperatura del cuarto', tipo:'n'},
+      {t:'Hay productos sin rotular?', tipo:'c'},
+      {t:'Hay productos vencidos?', tipo:'c'}
+    ]},
+    {id:'proceso', nombre:'Zona de Proceso', preguntas:[
+      {t:'Limpieza y desinfeccion general', tipo:'c'},
+      {t:'Maquinas y utensilios sin danos?', tipo:'c'}
+    ]},
+    {id:'flowpack', nombre:'Cuarto Flowpack', preguntas:[
+      {t:'Temperatura del cuarto', tipo:'n'},
+      {t:'Que producto se esta empacando?', tipo:'e', ops:['Pandebono','Ponque vainilla','Pan blandito','Muffin queso','Pan calentano','Pan maiz','Hojaldre bocadillo','Croissant de queso','Croissant sin relleno']},
+      {t:'Esta correctamente rotulado?', tipo:'c'}
+    ]},
+    {id:'ptseco', nombre:'PT Seco', preguntas:[
+      {t:'Hay productos sin rotular?', tipo:'c'},
+      {t:'Hay productos vencidos?', tipo:'c'}
+    ]},
+    {id:'ptrefri', nombre:'PT Refrigerado', preguntas:[
+      {t:'Hay productos sin rotular?', tipo:'c'},
+      {t:'Hay productos vencidos?', tipo:'c'}
+    ]}
+  ]}
+];
+
+/* ---- ICONOS ---- */
+var IARR = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 4.5l4.5 4.5L7 13.5" stroke="#B4B2A9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var ICHECK = '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="#9FE1CB"/><path d="M7 11l3 3 5-5" stroke="#085041" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var IPEND = '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" stroke="#B4B2A9" stroke-width="1.5"/><path d="M11 6v5l3 3" stroke="#888780" stroke-width="1.5" stroke-linecap="round"/></svg>';
+var IEMPTY = '<svg width="52" height="52" viewBox="0 0 52 52" fill="none" style="margin:0 auto;display:block"><rect x="8" y="12" width="36" height="32" rx="5" stroke="#B4B2A9" stroke-width="2"/><path d="M18 24h16M18 32h10" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round"/></svg>';
+
+function icoLinea(id, c) {
+  var s = '';
+  if (id === 'g') s = '<path d="M12 4C9 4 6 6.5 6 9.5c0 2 1 3.5 3 4.5V18h6v-4c2-1 3-2.5 3-4.5C18 6.5 15 4 12 4z" stroke="' + c + '" stroke-width="1.6" fill="none"/><rect x="9" y="18" width="6" height="3" rx="1" fill="' + c + '"/>';
+  if (id === 'e') s = '<rect x="3" y="6" width="18" height="13" rx="2.5" stroke="' + c + '" stroke-width="1.6"/><path d="M7 11h10M7 15h6" stroke="' + c + '" stroke-width="1.6" stroke-linecap="round"/>';
+  if (id === 'p') s = '<path d="M5 15c0-5 3.5-9 7-9s7 4 7 9" stroke="' + c + '" stroke-width="1.6" stroke-linecap="round"/><rect x="4" y="15" width="16" height="6" rx="2" stroke="' + c + '" stroke-width="1.6"/>';
+  return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none">' + s + '</svg>';
+}
+
+/* ---- ESTADO ---- */
+var ST = { fecha: '', analista: '', linea: '', zona: '', resp: {} };
+var TV = {};
+
+/* ---- HELPERS ---- */
+function getLinea(id) {
+  for (var i = 0; i < LINEAS.length; i++) { if (LINEAS[i].id === id) return LINEAS[i]; }
+  return null;
+}
+function getZona(lid, zid) {
+  var l = getLinea(lid);
+  if (!l) return null;
+  for (var i = 0; i < l.zonas.length; i++) { if (l.zonas[i].id === zid) return l.zonas[i]; }
+  return null;
+}
+function contarResp(lid, zid) {
+  if (!ST.resp[lid] || !ST.resp[lid][zid]) return 0;
+  return Object.keys(ST.resp[lid][zid]).length;
+}
+function zonaCompleta(lid, z) {
+  return contarResp(lid, z.id) >= z.preguntas.length;
+}
+function ensureResp() {
+  if (!ST.resp[ST.linea]) ST.resp[ST.linea] = {};
+  if (!ST.resp[ST.linea][ST.zona]) ST.resp[ST.linea][ST.zona] = {};
+}
+
+/* ---- NAVEGACION ---- */
+function showS(id) {
+  var ss = document.querySelectorAll('.screen');
+  for (var i = 0; i < ss.length; i++) ss[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function irInicio() { showS('s-inicio'); }
+function irZonas() {
+  document.getElementById('z-tit').textContent = getLinea(ST.linea).nombre;
+  renderZonas();
+  showS('s-zonas');
+}
+function irDash() { renderDash(); showS('s-dash'); }
+
+/* ---- INICIO ---- */
+function selA(nombre) {
+  ST.analista = nombre;
+  document.getElementById('btn-A').classList.remove('sel');
+  document.getElementById('btn-F').classList.remove('sel');
+  if (nombre === 'Angela') document.getElementById('btn-A').classList.add('sel');
+  else document.getElementById('btn-F').classList.add('sel');
+}
+
+function renderLineas() {
+  var h = '';
+  for (var i = 0; i < LINEAS.length; i++) {
+    var l = LINEAS[i];
+    h += '<button class="lbtn" onclick="abrirLinea(\'' + l.id + '\')">' +
+      '<div class="lico" style="background:' + l.color + '">' + icoLinea(l.id, l.ci) + '</div>' +
+      '<div style="flex:1;min-width:0"><div class="lname">' + l.nombre + '</div><div class="lsub">' + l.zonas.length + ' zonas de inspeccion</div></div>' +
+      IARR + '</button>';
+  }
+  document.getElementById('lineas-list').innerHTML = h;
+}
+
+function abrirLinea(id) {
+  if (!ST.fecha) { toast('Selecciona la fecha primero'); return; }
+  if (!ST.analista) { toast('Selecciona el analista'); return; }
+  ST.linea = id;
+  if (!ST.resp[id]) ST.resp[id] = {};
+  irZonas();
+}
+
+/* ---- ZONAS ---- */
+function renderZonas() {
+  var l = getLinea(ST.linea);
+  var comp = 0;
+  for (var i = 0; i < l.zonas.length; i++) { if (zonaCompleta(ST.linea, l.zonas[i])) comp++; }
+  var pct = Math.round(comp / l.zonas.length * 100);
+  document.getElementById('z-pfill').style.width = pct + '%';
+  document.getElementById('z-ppct').textContent = pct + '%';
+  document.getElementById('z-sub').textContent = ST.analista + ' - ' + ST.fecha;
+  document.getElementById('z-plbl').textContent = comp + ' de ' + l.zonas.length + ' zonas';
+  var h = '';
+  for (var i = 0; i < l.zonas.length; i++) {
+    var z = l.zonas[i];
+    var done = zonaCompleta(ST.linea, z);
+    var cnt = contarResp(ST.linea, z.id);
+    h += '<button class="zbtn' + (done ? ' done' : '') + '" onclick="abrirZona(\'' + z.id + '\')">' +
+      '<div class="zdot">' + (done ? ICHECK : IPEND) + '</div>' +
+      '<div style="flex:1;min-width:0"><div class="zname">' + z.nombre + '</div>' +
+      '<div class="zcount">' + z.preguntas.length + ' preguntas - ' + (done ? 'Completada' : cnt + ' respondidas') + '</div></div>' +
+      IARR + '</button>';
+  }
+  document.getElementById('zonas-list').innerHTML = h;
+  document.getElementById('btn-fin').disabled = (comp < l.zonas.length);
+}
+
+function abrirZona(zid) {
+  ST.zona = zid;
+  TV = {};
+  var z = getZona(ST.linea, zid);
+  document.getElementById('p-tit').textContent = z.nombre;
+  document.getElementById('p-sub').textContent = getLinea(ST.linea).nombre + ' - ' + ST.analista;
+  renderPregs();
+  showS('s-pregs');
+}
+
+/* ---- PREGUNTAS ---- */
+function renderPregs() {
+  var z = getZona(ST.linea, ST.zona);
+  var rv = (ST.resp[ST.linea] && ST.resp[ST.linea][ST.zona]) ? ST.resp[ST.linea][ST.zona] : {};
+  var h = '';
+  for (var i = 0; i < z.preguntas.length; i++) {
+    var p = z.preguntas[i];
+    var v = rv[i];
+    h += '<div class="pcard"><div class="pnum">Pregunta ' + (i + 1) + ' de ' + z.preguntas.length + '</div><div class="ptxt">' + p.t + '</div>';
+    if (p.tipo === 'n') {
+      var cur = (v !== undefined) ? v : 0;
+      TV[i] = cur;
+      h += '<div class="twrap' + (v !== undefined ? ' filled' : '') + '" id="tw' + i + '">' +
+        '<button class="tbtn" onclick="chT(' + i + ',-1)">&#8722;</button>' +
+        '<div class="tval" id="tv' + i + '">' + cur + '</div>' +
+        '<div class="tunit">&#176;C</div>' +
+        '<button class="tbtn" onclick="chT(' + i + ',1)">+</button></div>';
+    } else if (p.tipo === 'e') {
+      h += '<div style="display:flex;flex-direction:column;gap:8px">';
+      for (var j = 0; j < p.ops.length; j++) {
+        var op = p.ops[j];
+        h += '<button class="rbtn en' + (v === op ? ' sel' : '') + '" onclick="setR(' + i + ',\'' + op + '\',this)">' + op + '</button>';
+      }
+      h += '</div>';
+    } else {
+      h += '<div class="rrow">' +
+        '<button class="rbtn ok' + (v === 'Cumple' ? ' sel' : '') + '" onclick="setR(' + i + ',\'Cumple\',this)">Cumple</button>' +
+        '<button class="rbtn nok' + (v === 'No cumple' ? ' sel' : '') + '" onclick="setR(' + i + ',\'No cumple\',this)">No cumple</button>' +
+        '<button class="rbtn na' + (v === 'N/A' ? ' sel' : '') + '" onclick="setR(' + i + ',\'N/A\',this)" style="max-width:60px">N/A</button></div>';
+    }
+    h += '</div>';
+  }
+  document.getElementById('pregs-body').innerHTML = h;
+}
+
+function chT(i, d) {
+  if (TV[i] === undefined) TV[i] = 0;
+  TV[i] += d;
+  document.getElementById('tv' + i).textContent = TV[i];
+  document.getElementById('tw' + i).classList.add('filled');
+  ensureResp();
+  ST.resp[ST.linea][ST.zona][i] = TV[i];
+}
+
+function setR(i, val, btn) {
+  ensureResp();
+  ST.resp[ST.linea][ST.zona][i] = val;
+  var parent = btn.parentNode;
+  var bs = parent.querySelectorAll('.rbtn');
+  for (var b = 0; b < bs.length; b++) bs[b].classList.remove('sel');
+  btn.classList.add('sel');
+}
+
+function guardarZona() {
+  var z = getZona(ST.linea, ST.zona);
+  var cnt = contarResp(ST.linea, ST.zona);
+  var falt = z.preguntas.length - cnt;
+  if (falt > 0 && !confirm('Faltan ' + falt + ' respuesta(s). Guardar de todas formas?')) return;
+  toast('Zona guardada');
+  irZonas();
+}
+
+/* ---- FINALIZAR LINEA → SUPABASE ---- */
+function finLinea() {
+  var l = getLinea(ST.linea);
+  var ts = new Date().toISOString();
+  var rows = [];
+  for (var i = 0; i < l.zonas.length; i++) {
+    var z = l.zonas[i];
+    var zr = (ST.resp[ST.linea] && ST.resp[ST.linea][z.id]) ? ST.resp[ST.linea][z.id] : {};
+    for (var k = 0; k < z.preguntas.length; k++) {
+      rows.push({
+        fecha: ST.fecha,
+        analista: ST.analista,
+        linea: l.nombre,
+        linea_id: l.id,
+        zona: z.nombre,
+        pregunta: z.preguntas[k].t,
+        respuesta: zr[k] !== undefined ? String(zr[k]) : '',
+        timestamp: ts
+      });
+    }
+  }
+  toast('Guardando...');
+  insertarRegistros(rows).then(function(res) {
+    if (res.ok || res.status === 201) {
+      ST.resp[ST.linea] = {};
+      toast('Linea "' + l.nombre + '" guardada en Supabase');
+      irInicio();
+    } else {
+      res.text().then(function(t) { toast('Error al guardar: ' + t); });
+    }
+  }).catch(function(err) {
+    toast('Error de conexion: ' + err.message);
+  });
+}
+
+/* ---- DASHBOARD ---- */
+function renderDash() {
+  document.getElementById('tp-res').innerHTML = '<div class="loading"><div class="spinner"></div>Cargando registros...</div>';
+  document.getElementById('tp-reg').innerHTML = '<div class="loading"><div class="spinner"></div>Cargando...</div>';
+
+  obtenerRegistros().then(function(res) {
+    return res.json();
+  }).then(function(data) {
+    var R = data;
+    if (!R || !R.length) {
+      document.getElementById('tp-res').innerHTML = '<div class="empty">' + IEMPTY + '<div class="etxt">Sin registros aun.<br>Completa una ruta de inspeccion.</div></div>';
+      document.getElementById('tp-reg').innerHTML = '<div class="empty">' + IEMPTY + '<div class="etxt">Sin historial aun.</div></div>';
+      return;
+    }
+
+    var tOk = 0, tNok = 0, tP = 0, lc = {}, analistas = {};
+    for (var i = 0; i < R.length; i++) {
+      var r = R[i];
+      if (r.respuesta === 'Cumple') { tOk++; tP++; }
+      else if (r.respuesta === 'No cumple') { tNok++; tP++; }
+      else if (r.respuesta) tP++;
+      lc[r.linea] = (lc[r.linea] || 0) + 1;
+      analistas[r.analista] = (analistas[r.analista] || 0) + 1;
+    }
+    var pct = tP > 0 ? Math.round(tOk / tP * 100) : 0;
+
+    var lh = '';
+    var lks = Object.keys(lc);
+    for (var i = 0; i < lks.length; i++) {
+      lh += '<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #F1EFE8"><span style="font-size:14px;color:#2C2C2A">' + lks[i] + '</span><span style="font-size:14px;font-weight:600;color:#085041">' + lc[lks[i]] + ' registros</span></div>';
+    }
+
+    document.getElementById('tp-res').innerHTML =
+      '<div class="sgrid">' +
+        '<div class="sbox"><div class="slb">Total filas</div><div class="sv">' + R.length + '</div></div>' +
+        '<div class="sbox"><div class="slb">Cumplimiento</div><div class="sv g">' + pct + '%</div></div>' +
+        '<div class="sbox"><div class="slb">Cumplen</div><div class="sv g">' + tOk + '</div></div>' +
+        '<div class="sbox"><div class="slb">No cumplen</div><div class="sv r">' + tNok + '</div></div>' +
+      '</div>' +
+      '<div class="card" style="margin-top:0"><div class="slbl">Por linea</div>' + lh + '</div>';
+
+    // Agrupar por timestamp para mostrar inspecciones
+    var grupos = {};
+    for (var i = 0; i < R.length; i++) {
+      var r = R[i];
+      var key = r.timestamp + '_' + r.analista + '_' + r.linea;
+      if (!grupos[key]) grupos[key] = {fecha: r.fecha, analista: r.analista, linea: r.linea, ts: r.timestamp, ok: 0, nok: 0};
+      if (r.respuesta === 'Cumple') grupos[key].ok++;
+      if (r.respuesta === 'No cumple') grupos[key].nok++;
+    }
+    var gks = Object.keys(grupos);
+    var rh = '';
+    for (var i = gks.length - 1; i >= 0; i--) {
+      var g = grupos[gks[i]];
+      var hora = '';
+      try { hora = new Date(g.ts).toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'}); } catch(e) {}
+      rh += '<div class="rcard">' +
+        '<div class="rtop"><div><div class="rfecha">' + g.fecha + ' - ' + g.analista + '</div><div class="rhora">' + hora + '</div></div>' +
+        '<div class="rpill">' + g.linea + '</div></div>' +
+        '<div class="rstats"><span class="rok">Cumplen: ' + g.ok + '</span><span class="rnok">No cumplen: ' + g.nok + '</span></div>' +
+      '</div>';
+    }
+    document.getElementById('tp-reg').innerHTML = rh || '<div class="empty">' + IEMPTY + '<div class="etxt">Sin historial.</div></div>';
+
+  }).catch(function(err) {
+    document.getElementById('tp-res').innerHTML = '<div class="empty"><div class="etxt">Error al cargar datos.<br>' + err.message + '</div></div>';
+  });
+
+  document.getElementById('tp-exp').innerHTML =
+    '<div class="card"><div class="slbl">Exportar datos</div>' +
+    '<p style="font-size:14px;color:#5F5E5A;margin-bottom:16px;line-height:1.6">Descarga todos los registros de Supabase en formato CSV.</p>' +
+    '<button class="bexp" onclick="exportCSV()">Descargar CSV</button></div>' +
+    '<div class="tipbox">Los datos vienen en tiempo real desde Supabase. Cada linea del CSV es una respuesta individual.</div>';
+}
+
+function cambTab(t) {
+  var tabs = ['res', 'reg', 'exp'];
+  for (var i = 0; i < tabs.length; i++) {
+    var on = tabs[i] === t;
+    document.getElementById('tb-' + tabs[i]).classList[on ? 'add' : 'remove']('act');
+    document.getElementById('tp-' + tabs[i]).classList[on ? 'add' : 'remove']('act');
+  }
+}
+
+function exportCSV() {
+  toast('Descargando datos...');
+  obtenerRegistros().then(function(res) { return res.json(); }).then(function(R) {
+    if (!R || !R.length) { toast('Sin registros para exportar'); return; }
+    var rows = [['ID','Fecha','Analista','Linea','Zona','Pregunta','Respuesta','Timestamp']];
+    for (var i = 0; i < R.length; i++) {
+      var r = R[i];
+      rows.push([r.id, r.fecha, r.analista, r.linea, r.zona, r.pregunta, r.respuesta, r.timestamp]);
+    }
+    var csv = '';
+    for (var i = 0; i < rows.length; i++) {
+      var row = '';
+      for (var j = 0; j < rows[i].length; j++) {
+        if (j > 0) row += ',';
+        row += '"' + String(rows[i][j] || '').replace(/"/g, '""') + '"';
+      }
+      csv += row + '\n';
+    }
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'}));
+    a.download = 'alinnova_' + new Date().toISOString().split('T')[0] + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }).catch(function(err) { toast('Error: ' + err.message); });
+}
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var hoy = new Date();
+  var mm = hoy.getMonth() + 1;
+  var dd = hoy.getDate();
+  var yyyy = hoy.getFullYear();
+  var fechaStr = yyyy + '-' + (mm < 10 ? '0' : '') + mm + '-' + (dd < 10 ? '0' : '') + dd;
+  var fi = document.getElementById('f-fecha');
+  fi.value = fechaStr;
+  ST.fecha = fechaStr;
+  fi.addEventListener('change', function() { ST.fecha = fi.value; });
+  renderLineas();
+});
+</script>
+</body>
+</html>
