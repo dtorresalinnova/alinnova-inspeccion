@@ -269,13 +269,15 @@ var LINEAS = [
     {id:'recibo', nombre:'Zona de recibo', preguntas:[
       {t:'Limpieza y desinfeccion general', tipo:'c'},
       {t:'Filtro sanitario con desinfectante y jabones?', tipo:'c'},
-      {t:'Trampas de roedores libres?', tipo:'c'}
+      {t:'Trampas de roedores libres?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'cfpt', nombre:'CF PT Gastronomia', preguntas:[
       {t:'Están todos los productos correctamente rotulado?', tipo:'c'},
       {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'},
       {t:'Hay espacio entre canastillas y pared?', tipo:'c'},
-      {t:'Temperatura del cuarto', tipo:'n'}
+      {t:'Temperatura del cuarto', tipo:'n'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'emp', nombre:'Cuarto de empacado', preguntas:[
       {t:'Temperatura del cuarto', tipo:'n'},
@@ -284,25 +286,30 @@ var LINEAS = [
       {t:'Tajadora completa sin partes rotas?', tipo:'c'},
       {t:'Que producto estan empacando?', tipo:'e', ops:['Garbanzo','Frijol','Pollo desmechado','Cerdo desmechado','Res desmechada','Pernil de cerdo','Patacon']},
       {t:'Utensilios corresponden al color estipulado?', tipo:'c'},
-      {t:'El gramaje del producto terminado cumple?', tipo:'c'}
+      {t:'El gramaje del producto terminado cumple?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'hor', nombre:'Zona de Horneo', preguntas:[
-      {t:'Limpieza y desinfeccion general', tipo:'c'}
+      {t:'Limpieza y desinfeccion general', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'pre', nombre:'Zona de prealistamiento', preguntas:[
       {t:'Limpieza y desinfeccion general', tipo:'c'},
       {t:'Cuchillos y utensilios sin danos?', tipo:'c'},
-      {t:'Utensilios corresponden al color estipulado?', tipo:'c'}
+      {t:'Utensilios corresponden al color estipulado?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'cfprot', nombre:'CF Proteinas Crudas', preguntas:[
       {t:'Temperatura del cuarto', tipo:'n'},
       {t:'Están todos los productos correctamente rotulado?', tipo:'c'},
-      {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'}
+      {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'bpmg', nombre:'BPM Operarios', preguntas:[
       {t:'Cuenta con uniforme adecuado?', tipo:'c'},
       {t:'Cuenta con unas en buen estado?', tipo:'c'},
-      {t:'Estan sin maquillaje?', tipo:'c'}
+      {t:'Estan sin maquillaje?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]}
   ]},
   {id:'e', nombre:'Ensamble y Refrigerios', color:'#E6F1FB', ci:'#0C447C',
@@ -311,35 +318,41 @@ var LINEAS = [
       {t:'Están todos los productos correctamente rotulado?', tipo:'c'},
       {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'},
       {t:'Hay espacio entre canastillas y pared?', tipo:'c'},
-      {t:'Temperatura del cuarto', tipo:'n'}
+      {t:'Temperatura del cuarto', tipo:'n'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'banda', nombre:'Banda de ensamble', preguntas:[
       {t:'Temperatura del cuarto', tipo:'n'},
       {t:'Limpieza y desinfeccion general', tipo:'c'},
       {t:'Utensilios en buen estado?', tipo:'c'},
-      {t:'Que producto se esta ensamblando?', tipo:'e', ops:['Rollo de pollo','Wrap de pollo','Sanduche de cerdo','Sanduche de queso','Sanduche de pernil','SED Rollo de pollo','SED Rollo de queso']}
+      {t:'Que producto se esta ensamblando?', tipo:'e', ops:['Rollo de pollo','Wrap de pollo','Sanduche de cerdo','Sanduche de queso','Sanduche de pernil','SED Rollo de pollo','SED Rollo de queso','Ninguno']},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'cfmpr', nombre:'CF MP Refrigerios', preguntas:[
       {t:'Están todos los productos correctamente rotulado?', tipo:'c'},
       {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'},
       {t:'Hay espacio entre canastillas y pared?', tipo:'c'},
-      {t:'Temperatura del cuarto', tipo:'n'}
+      {t:'Temperatura del cuarto', tipo:'n'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'seco', nombre:'Almacenamiento en Seco', preguntas:[
       {t:'Están todos los productos correctamente rotulado?', tipo:'c'},
       {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'},
-      {t:'Hay espacio entre canastillas y pared?', tipo:'c'}
+      {t:'Hay espacio entre canastillas y pared?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'contra', nombre:'CF de Contramuestras', preguntas:[
       {t:'Están todos los productos correctamente rotulado?', tipo:'c'},
       {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'},
       {t:'Hay espacio entre canastillas y pared?', tipo:'c'},
-      {t:'Temperatura del cuarto', tipo:'n'}
+      {t:'Temperatura del cuarto', tipo:'n'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'bpme', nombre:'BPM Operarios', preguntas:[
       {t:'Cuenta con uniforme adecuado?', tipo:'c'},
       {t:'Cuenta con unas en buen estado?', tipo:'c'},
-      {t:'Estan sin maquillaje?', tipo:'c'}
+      {t:'Estan sin maquillaje?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]}
   ]},
   {id:'p', nombre:'Panaderia', color:'#FAEEDA', ci:'#633806',
@@ -347,37 +360,46 @@ var LINEAS = [
     {id:'recibop', nombre:'Zona de recibo', preguntas:[
       {t:'Limpieza y desinfeccion general', tipo:'c'},
       {t:'Filtro sanitario con desinfectante y jabones?', tipo:'c'},
-      {t:'Trampas de roedores libres?', tipo:'c'}
+      {t:'Trampas de roedores libres?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'lavado', nombre:'Cuarto lavado de canastillas', preguntas:[
-      {t:'Limpieza y desinfeccion general', tipo:'c'}
+      {t:'Limpieza y desinfeccion general', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'mpseca', nombre:'Cuarto de MP Seca', preguntas:[
       {t:'Están todos los productos correctamente rotulado?', tipo:'c'},
       {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'},
-      {t:'Hay espacio entre canastillas y pared?', tipo:'c'}
+      {t:'Hay espacio entre canastillas y pared?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'cfmpp', nombre:'Cuarto Frio MP', preguntas:[
       {t:'Temperatura del cuarto', tipo:'n'},
       {t:'Están todos los productos correctamente rotulado?', tipo:'c'},
-      {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'}
+      {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'proceso', nombre:'Zona de Proceso', preguntas:[
       {t:'Limpieza y desinfeccion general', tipo:'c'},
-      {t:'Maquinas y utensilios sin danos?', tipo:'c'}
+      {t:'Maquinas y utensilios sin danos?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'flowpack', nombre:'Cuarto Flowpack', preguntas:[
       {t:'Temperatura del cuarto', tipo:'n'},
       {t:'Que producto se esta empacando?', tipo:'e', ops:['Pandebono','Ponque vainilla','Pan blandito','Muffin queso','Pan calentano','Pan maiz','Hojaldre bocadillo','Croissant de queso','Croissant sin relleno']},
-      {t:'Esta correctamente rotulado?', tipo:'c'}
+      {t:'Esta correctamente rotulado?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'ptseco', nombre:'PT Seco', preguntas:[
       {t:'Están todos los productos correctamente rotulado?', tipo:'c'},
-      {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'}
+      {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]},
     {id:'ptrefri', nombre:'PT Refrigerado', preguntas:[
+      {t:'Temperatura del cuarto', tipo:'n'},
       {t:'Están todos los productos correctamente rotulado?', tipo:'c'},
-      {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'}
+      {t:'Los productos cumplen con fecha de vencimiento vigente?', tipo:'c'},
+      {t:'Medias cañas en buen estado?', tipo:'c'}
     ]}
   ]}
 ];
