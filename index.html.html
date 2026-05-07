@@ -70,6 +70,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 .tbtn{width:60px;height:58px;border:none;background:transparent;font-size:30px;cursor:pointer;color:#085041;font-weight:300;flex-shrink:0;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-family:inherit;-webkit-appearance:none}
 .tbtn:active{background:rgba(8,80,65,0.12)}
 .tval{-webkit-flex:1;flex:1;text-align:center;font-size:24px;font-weight:700;color:#2C2C2A;padding:0 4px}
+.tinput{border:none;background:transparent;outline:none;font-family:inherit;width:0;min-width:0;-moz-appearance:textfield}
+.tinput::-webkit-inner-spin-button,.tinput::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .tunit{font-size:14px;color:#5F5E5A;padding-right:16px;font-weight:500}
 .tabbar{display:-webkit-flex;display:flex;background:#D3D1C7;border-radius:14px;padding:4px;margin-bottom:16px;gap:3px}
 .tabbtn{-webkit-flex:1;flex:1;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:#5F5E5A;-webkit-appearance:none;font-family:inherit}
@@ -518,7 +520,7 @@ function renderPregs() {
       TV[i] = cur;
       h += '<div class="twrap' + (v !== undefined ? ' filled' : '') + '" id="tw' + i + '">' +
         '<button class="tbtn" onclick="chT(' + i + ',-1)">&#8722;</button>' +
-        '<div class="tval" id="tv' + i + '">' + cur + '</div>' +
+        '<input type="number" class="tval tinput" id="tv' + i + '" value="' + cur + '" oninput="onTInput(' + i + ',this)">' +
         '<div class="tunit">&#176;C</div>' +
         '<button class="tbtn" onclick="chT(' + i + ',1)">+</button></div>';
     } else if (p.tipo === 'e') {
@@ -542,10 +544,20 @@ function renderPregs() {
 function chT(i, d) {
   if (TV[i] === undefined) TV[i] = 0;
   TV[i] += d;
-  document.getElementById('tv' + i).textContent = TV[i];
+  var inp = document.getElementById('tv' + i);
+  if (inp) inp.value = TV[i];
   document.getElementById('tw' + i).classList.add('filled');
   ensureResp();
   ST.resp[ST.linea][ST.zona][i] = TV[i];
+}
+
+function onTInput(i, el) {
+  var v = parseFloat(el.value);
+  if (isNaN(v)) return;
+  TV[i] = v;
+  document.getElementById('tw' + i).classList.add('filled');
+  ensureResp();
+  ST.resp[ST.linea][ST.zona][i] = v;
 }
 
 function setR(i, val, btn) {
