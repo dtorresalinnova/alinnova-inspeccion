@@ -81,6 +81,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 .sv{font-size:28px;font-weight:700;color:#2C2C2A}
 .sv.g{color:#085041}.sv.r{color:#A32D2D}
 .rcard{background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:16px;padding:16px;margin-bottom:10px}
+.btn-del-reg{background:none;border:none;cursor:pointer;color:#bbb;padding:4px;border-radius:8px;display:flex;align-items:center;transition:color .15s,background .15s}
+.btn-del-reg:hover{color:#A32D2D;background:#fdf0f0}
 .rtop{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:10px;gap:8px}
 .rfecha{font-size:15px;font-weight:600;color:#2C2C2A}
 .rhora{font-size:12px;color:#888780;margin-top:3px}
@@ -242,6 +244,19 @@ function insertarRegistros(rows) {
 
 function obtenerRegistros() {
   return supaFetch('registros?order=created_at.desc&limit=500', 'GET');
+}
+
+function eliminarGrupo(ts, analista, linea) {
+  if (!confirm('¿Eliminar este registro de historial?')) return;
+  var q = 'registros?timestamp=eq.' + encodeURIComponent(ts) +
+          '&analista=eq.' + encodeURIComponent(analista) +
+          '&linea=eq.' + encodeURIComponent(linea);
+  supaFetch(q, 'DELETE').then(function() {
+    toast('Registro eliminado');
+    cargarYRenderizar();
+  }).catch(function() {
+    toast('Error al eliminar');
+  });
 }
 
 /* ---- DATOS ---- */
@@ -805,9 +820,15 @@ function renderHistorial(R) {
     var gpc = pctColor(gp); var gpbc = pctBarColor(gp);
     var hora = '';
     try { hora = new Date(g.ts).toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'}); } catch(e) {}
+    var gts = gks[i].split('_')[0];
+    var gAnalista = encodeURIComponent(g.analista);
+    var gLinea = encodeURIComponent(g.linea);
     rh += '<div class="rcard">' +
       '<div class="rtop"><div><div class="rfecha">' + g.fecha + ' - ' + g.analista + '</div><div class="rhora">' + hora + '</div></div>' +
-      '<div class="rpill">' + g.linea + '</div></div>' +
+      '<div style="display:flex;align-items:center;gap:8px"><div class="rpill">' + g.linea + '</div>' +
+      '<button class="btn-del-reg" onclick="eliminarGrupo(\'' + g.ts.replace(/'/g,"\\'") + '\',\'' + g.analista.replace(/'/g,"\\'") + '\',\'' + g.linea.replace(/'/g,"\\'") + '\')" title="Eliminar registro">' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>' +
+      '</button></div></div>' +
       '<div style="margin:8px 0 4px"><div class="pbar-track"><div class="pbar-fill ' + gpbc + '" style="width:' + gp + '%"></div></div></div>' +
       '<div class="rstats">' +
         '<span style="font-size:14px;font-weight:700;color:' + (gpc==='g'?'#085041':gpc==='a'?'#BA7517':'#A32D2D') + '">' + gp + '%</span>' +
