@@ -122,6 +122,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 .zona-pct{font-size:20px;font-weight:700}
 .zona-pct.g{color:#0F6B47}.zona-pct.r{color:#A32D2D}.zona-pct.a{color:#BA7517}
 .refresh-btn{width:100%;padding:10px;border:1.5px solid #D3D1C7;border-radius:10px;font-size:13px;cursor:pointer;background:transparent;color:#3D1F3D;font-weight:600;font-family:inherit;margin-bottom:12px}
+.mant-pill{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.mant-pill.pend{background:#FCEBEB;color:#791F1F}
+.mant-pill.proc{background:#FEF3E2;color:#874D0C}
+.mant-pill.cerr{background:#E1F5EE;color:#085041}
+.mant-card{background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:16px;padding:16px;margin-bottom:10px}
+.mant-desc{font-size:14px;color:#5F5E5A;margin:8px 0;line-height:1.5}
+.estado-btns{display:-webkit-flex;display:flex;gap:6px;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin-top:12px}
+.estado-btn{padding:8px 14px;border:2px solid transparent;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;-webkit-appearance:none;font-family:inherit;opacity:0.45}
+.estado-btn.act{opacity:1;border-color:currentColor}
+.estado-btn.pend{background:#FCEBEB;color:#791F1F}
+.estado-btn.proc{background:#FEF3E2;color:#874D0C}
+.estado-btn.cerr{background:#E1F5EE;color:#085041}
+.mfilt{display:-webkit-flex;display:flex;gap:8px;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin-bottom:14px}
+.mfbtn{padding:9px 16px;border:1.5px solid #D3D1C7;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;background:#F5F0F5;color:#5F5E5A;-webkit-appearance:none;font-family:inherit}
+.mfbtn.act{background:#3D1F3D;color:#fff;border-color:#3D1F3D}
 </style>
 </head>
 <body>
@@ -129,7 +144,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 
 <div id="s-inicio" class="screen active">
   <div class="hero">
-    <div class="herorow">
+    <div class="herorow" style="gap:8px">
+      <button class="tbact" onclick="irMant()">Mantenimiento</button>
       <button class="tbact" onclick="irDash()">Ver registros</button>
     </div>
     <div class="heroico">
@@ -208,6 +224,63 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
     <div id="tp-res" class="tabp act"></div>
     <div id="tp-reg" class="tabp"></div>
     <div id="tp-exp" class="tabp"></div>
+  </div>
+</div>
+
+
+<div id="s-mant" class="screen">
+  <div class="topbar">
+    <button class="tbback" onclick="irInicio()">&#8249;</button>
+    <div class="tbinfo">
+      <div class="tbtitle">Mantenimiento</div>
+      <div class="tbsub">Solicitudes de mantenimiento</div>
+    </div>
+  </div>
+  <div class="bp">
+    <div class="tabbar">
+      <button class="tabbtn act" id="mtb-form" onclick="mantCambTab('form')">Nueva solicitud</button>
+      <button class="tabbtn" id="mtb-gest" onclick="mantCambTab('gest')">Gesti&#243;n</button>
+    </div>
+    <div id="mtp-form" class="tabp act">
+      <div class="card">
+        <div class="slbl">Fecha</div>
+        <input type="date" class="finput" id="mant-fecha">
+        <div class="slbl" style="margin-top:16px">Analista</div>
+        <select class="finput" id="mant-analista" style="margin-top:8px">
+          <option value="">-- Seleccionar analista --</option>
+          <option value="Angela">Angela</option>
+          <option value="Felipe">Felipe</option>
+          <option value="Fabian">Fabian</option>
+          <option value="David">David</option>
+          <option value="Juan Camilo">Juan Camilo</option>
+          <option value="Daniel">Daniel</option>
+          <option value="Giorgio">Giorgio</option>
+        </select>
+        <div class="slbl" style="margin-top:16px">L&#237;nea de producci&#243;n</div>
+        <select class="finput" id="mant-linea" onchange="mantCambiarLinea(this.value)" style="margin-top:8px">
+          <option value="">-- L&#237;nea --</option>
+        </select>
+        <div class="slbl" style="margin-top:16px">Zona</div>
+        <select class="finput" id="mant-zona" style="margin-top:8px">
+          <option value="">-- Zona --</option>
+        </select>
+        <div class="slbl" style="margin-top:16px">Descripci&#243;n de la necesidad</div>
+        <textarea class="finput" id="mant-desc" placeholder="Describe detalladamente la necesidad de mantenimiento..." style="margin-top:8px;resize:none;min-height:110px;line-height:1.5"></textarea>
+      </div>
+      <button class="btnm" id="btn-enviar-mant" onclick="enviarSolicitudMant()">Enviar solicitud</button>
+      <div style="height:24px"></div>
+    </div>
+    <div id="mtp-gest" class="tabp">
+      <div class="mfilt">
+        <button class="mfbtn act" data-f="Pendiente" onclick="mantSetFiltro('Pendiente')">Pendientes</button>
+        <button class="mfbtn" data-f="En proceso" onclick="mantSetFiltro('En proceso')">En proceso</button>
+        <button class="mfbtn" data-f="Cerrada" onclick="mantSetFiltro('Cerrada')">Cerradas</button>
+        <button class="mfbtn" data-f="Todas" onclick="mantSetFiltro('Todas')">Todas</button>
+      </div>
+      <button class="refresh-btn" onclick="renderMantGestion()">Actualizar</button>
+      <div id="mant-lista"></div>
+      <div style="height:24px"></div>
+    </div>
   </div>
 </div>
 
@@ -891,6 +964,178 @@ function exportCSV() {
     a.click();
     document.body.removeChild(a);
   }).catch(function(err) { toast('Error: ' + err.message); });
+}
+
+/* ---- MANTENIMIENTO ---- */
+var MANT = { filtro: 'Pendiente', data: [] };
+
+function obtenerMant() {
+  return supaFetch('mantenimiento?order=created_at.desc&limit=500', 'GET');
+}
+function insertarMant(row) {
+  return supaFetch('mantenimiento', 'POST', row);
+}
+function actualizarEstadoMant(id, estado) {
+  return supaFetch('mantenimiento?id=eq.' + id, 'PATCH', { estado: estado });
+}
+
+function irMant() {
+  var fi = document.getElementById('mant-fecha');
+  if (fi && !fi.value) {
+    var hoy = new Date();
+    var mm = hoy.getMonth()+1; var dd = hoy.getDate(); var yyyy = hoy.getFullYear();
+    fi.value = yyyy+'-'+(mm<10?'0':'')+mm+'-'+(dd<10?'0':'')+dd;
+  }
+  var sel = document.getElementById('mant-linea');
+  if (sel && sel.options.length <= 1) {
+    for (var i = 0; i < LINEAS.length; i++) {
+      var opt = document.createElement('option');
+      opt.value = LINEAS[i].id;
+      opt.textContent = LINEAS[i].nombre;
+      sel.appendChild(opt);
+    }
+  }
+  showS('s-mant');
+}
+
+function mantCambTab(t) {
+  var tabs = ['form', 'gest'];
+  for (var i = 0; i < tabs.length; i++) {
+    var on = tabs[i] === t;
+    document.getElementById('mtb-' + tabs[i]).classList[on ? 'add' : 'remove']('act');
+    document.getElementById('mtp-' + tabs[i]).classList[on ? 'add' : 'remove']('act');
+  }
+  if (t === 'gest') renderMantGestion();
+}
+
+function mantCambiarLinea(val) {
+  var selZ = document.getElementById('mant-zona');
+  selZ.innerHTML = '<option value="">-- Zona --</option>';
+  if (!val) return;
+  var l = getLinea(val);
+  if (!l) return;
+  for (var i = 0; i < l.zonas.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = l.zonas[i].nombre;
+    opt.textContent = l.zonas[i].nombre;
+    selZ.appendChild(opt);
+  }
+}
+
+function enviarSolicitudMant() {
+  var fecha = document.getElementById('mant-fecha').value;
+  var analista = document.getElementById('mant-analista').value;
+  var lineaId = document.getElementById('mant-linea').value;
+  var zona = document.getElementById('mant-zona').value;
+  var desc = document.getElementById('mant-desc').value.trim();
+  if (!fecha) { toast('Selecciona la fecha'); return; }
+  if (!analista) { toast('Selecciona el analista'); return; }
+  if (!lineaId) { toast('Selecciona la línea'); return; }
+  if (!zona) { toast('Selecciona la zona'); return; }
+  if (!desc) { toast('Ingresa la descripción'); return; }
+  var l = getLinea(lineaId);
+  var row = { fecha: fecha, analista: analista, linea: l.nombre, zona: zona, descripcion: desc, estado: 'Pendiente' };
+  var btn = document.getElementById('btn-enviar-mant');
+  btn.disabled = true;
+  toast('Guardando solicitud...');
+  insertarMant(row).then(function(res) {
+    btn.disabled = false;
+    if (res.ok || res.status === 201) {
+      toast('Solicitud enviada correctamente');
+      document.getElementById('mant-analista').value = '';
+      document.getElementById('mant-linea').value = '';
+      document.getElementById('mant-zona').innerHTML = '<option value="">-- Zona --</option>';
+      document.getElementById('mant-desc').value = '';
+    } else {
+      res.text().then(function(t) { toast('Error: ' + t); });
+    }
+  }).catch(function(err) { btn.disabled = false; toast('Error: ' + err.message); });
+}
+
+function renderMantGestion() {
+  var el = document.getElementById('mant-lista');
+  if (!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando...</div>';
+  obtenerMant().then(function(res) { return res.json(); }).then(function(data) {
+    MANT.data = data || [];
+    renderMantFiltrada();
+  }).catch(function(err) {
+    el.innerHTML = '<div class="empty"><div class="etxt">Error: ' + err.message + '</div></div>';
+  });
+}
+
+function mantSetFiltro(f) {
+  MANT.filtro = f;
+  var btns = document.querySelectorAll('.mfbtn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList[btns[i].getAttribute('data-f') === f ? 'add' : 'remove']('act');
+  }
+  renderMantFiltrada();
+}
+
+function renderMantFiltrada() {
+  var el = document.getElementById('mant-lista');
+  if (!el) return;
+  var filtrado = [];
+  for (var i = 0; i < MANT.data.length; i++) {
+    if (MANT.filtro === 'Todas' || MANT.data[i].estado === MANT.filtro) filtrado.push(MANT.data[i]);
+  }
+  if (!filtrado.length) {
+    el.innerHTML = '<div class="empty">' + IEMPTY + '<div class="etxt">No hay solicitudes.</div></div>';
+    return;
+  }
+  var porLinea = {};
+  for (var i = 0; i < filtrado.length; i++) {
+    var r = filtrado[i];
+    if (!porLinea[r.linea]) porLinea[r.linea] = [];
+    porLinea[r.linea].push(r);
+  }
+  var h = '';
+  var lks = Object.keys(porLinea);
+  for (var i = 0; i < lks.length; i++) {
+    h += '<div class="slbl">' + lks[i] + '</div>';
+    var regs = porLinea[lks[i]];
+    for (var j = 0; j < regs.length; j++) {
+      var r = regs[j];
+      var pc = r.estado === 'Pendiente' ? 'pend' : r.estado === 'En proceso' ? 'proc' : 'cerr';
+      h += '<div class="mant-card">' +
+        '<div class="rtop"><div><div class="rfecha">' + escHtml(r.fecha) + ' — ' + escHtml(r.analista) + '</div>' +
+        '<div class="rhora">' + escHtml(r.zona) + '</div></div>' +
+        '<span class="mant-pill ' + pc + '">' + escHtml(r.estado) + '</span></div>' +
+        '<div class="mant-desc">' + escHtml(r.descripcion) + '</div>' +
+        '<div class="estado-btns">' +
+          mantEstadoBtn(r.id, 'Pendiente', r.estado) +
+          mantEstadoBtn(r.id, 'En proceso', r.estado) +
+          mantEstadoBtn(r.id, 'Cerrada', r.estado) +
+        '</div></div>';
+    }
+  }
+  el.innerHTML = h;
+}
+
+function mantEstadoBtn(id, estado, actual) {
+  var cls = estado === 'Pendiente' ? 'pend' : estado === 'En proceso' ? 'proc' : 'cerr';
+  var isAct = estado === actual ? ' act' : '';
+  return '<button class="estado-btn ' + cls + isAct + '" onclick="cambiarEstadoMant(' + id + ',\'' + estado + '\')">' + estado + '</button>';
+}
+
+function cambiarEstadoMant(id, estado) {
+  toast('Actualizando...');
+  actualizarEstadoMant(id, estado).then(function(res) {
+    if (res.ok) {
+      for (var i = 0; i < MANT.data.length; i++) {
+        if (MANT.data[i].id === id) { MANT.data[i].estado = estado; break; }
+      }
+      renderMantFiltrada();
+      toast('Estado actualizado');
+    } else {
+      res.text().then(function(t) { toast('Error: ' + t); });
+    }
+  }).catch(function(err) { toast('Error: ' + err.message); });
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function toast(msg) {
