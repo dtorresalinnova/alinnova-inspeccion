@@ -137,6 +137,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 .mfilt{display:-webkit-flex;display:flex;gap:8px;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin-bottom:14px}
 .mfbtn{padding:9px 16px;border:1.5px solid #D3D1C7;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;background:#F5F0F5;color:#5F5E5A;-webkit-appearance:none;font-family:inherit}
 .mfbtn.act{background:#3D1F3D;color:#fff;border-color:#3D1F3D}
+.foto-upload-label{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px;width:100%;padding:13px 14px;border:1.5px dashed #C85327;border-radius:12px;font-size:14px;font-weight:500;color:#3D1F3D;background:#FDF3EE;cursor:pointer;-webkit-user-select:none;user-select:none}
+.foto-upload-label:active{background:#F7EAE8}
+.foto-prev-wrap{position:relative;display:block;margin-top:10px}
+.foto-prev-wrap img{width:100%;max-height:200px;object-fit:cover;border-radius:12px;display:block}
+.foto-prev-clear{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:#fff;font-size:18px;cursor:pointer;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-family:inherit;line-height:1;padding:0;-webkit-appearance:none}
+.foto-thumb{width:80px;height:80px;object-fit:cover;border-radius:10px;cursor:pointer;border:2px solid #D3D1C7;display:block;margin:10px 0;-webkit-tap-highlight-color:transparent}
+.obs-ta{resize:none;min-height:72px;line-height:1.5;font-size:14px}
+.obs-save-btn{margin-top:6px;padding:9px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:#3D1F3D;color:#fff;font-family:inherit;-webkit-appearance:none;display:inline-block}
+.obs-save-btn:active{background:#2A1030}
+.obs-block{margin-top:12px}
+.foto-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center}
+.foto-modal.open{display:-webkit-flex;display:flex}
 </style>
 </head>
 <body>
@@ -266,6 +278,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
         </select>
         <div class="slbl" style="margin-top:16px">Descripci&#243;n de la necesidad</div>
         <textarea class="finput" id="mant-desc" placeholder="Describe detalladamente la necesidad de mantenimiento..." style="margin-top:8px;resize:none;min-height:110px;line-height:1.5"></textarea>
+        <div class="slbl" style="margin-top:16px">Foto (opcional)</div>
+        <div style="margin-top:8px">
+          <label for="mant-foto" class="foto-upload-label">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C85327" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Tomar foto o seleccionar galería
+          </label>
+          <input type="file" id="mant-foto" accept="image/*" capture="environment" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" onchange="mantFotoPreview(this)">
+          <div id="mant-foto-preview"></div>
+        </div>
       </div>
       <button class="btnm" id="btn-enviar-mant" onclick="enviarSolicitudMant()">Enviar solicitud</button>
       <div style="height:24px"></div>
@@ -285,6 +306,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 </div>
 
 </div>
+
+<div id="foto-modal" class="foto-modal" onclick="cerrarFotoModal()">
+  <img id="foto-modal-img" src="" style="max-width:95%;max-height:90vh;border-radius:8px;object-fit:contain">
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -978,6 +1004,60 @@ function insertarMant(row) {
 function actualizarEstadoMant(id, estado) {
   return supaFetch('mantenimiento?id=eq.' + id, 'PATCH', { estado: estado });
 }
+function actualizarObsMant(id, obs) {
+  return supaFetch('mantenimiento?id=eq.' + id, 'PATCH', { observaciones: obs });
+}
+
+function supaStorageUpload(bucket, path, file) {
+  return fetch(SUPA_URL + '/storage/v1/object/' + bucket + '/' + encodeURIComponent(path), {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': file.type || 'image/jpeg',
+      'x-upsert': 'true'
+    },
+    body: file
+  });
+}
+function supaStoragePublicUrl(bucket, path) {
+  return SUPA_URL + '/storage/v1/object/public/' + bucket + '/' + encodeURIComponent(path);
+}
+
+function mantFotoPreview(input) {
+  var prev = document.getElementById('mant-foto-preview');
+  if (!input.files || !input.files[0]) { prev.innerHTML = ''; return; }
+  var url = URL.createObjectURL(input.files[0]);
+  prev.innerHTML = '<div class="foto-prev-wrap"><img src="' + url + '"><button class="foto-prev-clear" onclick="mantQuitarFoto()">&#215;</button></div>';
+}
+function mantQuitarFoto() {
+  var fi = document.getElementById('mant-foto');
+  if (fi) fi.value = '';
+  document.getElementById('mant-foto-preview').innerHTML = '';
+}
+function abrirFoto(url) {
+  document.getElementById('foto-modal-img').src = url;
+  document.getElementById('foto-modal').classList.add('open');
+}
+function cerrarFotoModal() {
+  document.getElementById('foto-modal').classList.remove('open');
+}
+function guardarObsMant(id) {
+  var ta = document.getElementById('obs-' + id);
+  if (!ta) return;
+  var obs = ta.value.trim();
+  toast('Guardando observación...');
+  actualizarObsMant(id, obs).then(function(res) {
+    if (res.ok) {
+      for (var i = 0; i < MANT.data.length; i++) {
+        if (MANT.data[i].id === id) { MANT.data[i].observaciones = obs; break; }
+      }
+      toast('Observación guardada');
+    } else {
+      res.text().then(function(t) { toast('Error: ' + t); });
+    }
+  }).catch(function(err) { toast('Error: ' + err.message); });
+}
 
 function irMant() {
   var fi = document.getElementById('mant-fecha');
@@ -1034,11 +1114,29 @@ function enviarSolicitudMant() {
   if (!zona) { toast('Selecciona la zona'); return; }
   if (!desc) { toast('Ingresa la descripción'); return; }
   var l = getLinea(lineaId);
-  var row = { fecha: fecha, analista: analista, linea: l.nombre, zona: zona, descripcion: desc, estado: 'Pendiente' };
   var btn = document.getElementById('btn-enviar-mant');
   btn.disabled = true;
-  toast('Guardando solicitud...');
-  insertarMant(row).then(function(res) {
+  var fotoInput = document.getElementById('mant-foto');
+  var fotoPromise;
+  if (fotoInput && fotoInput.files && fotoInput.files[0]) {
+    var file = fotoInput.files[0];
+    var nameParts = (file.name || 'foto.jpg').split('.');
+    var ext = nameParts.length > 1 ? nameParts[nameParts.length - 1] : 'jpg';
+    var path = Date.now() + '_' + Math.random().toString(36).substr(2, 8) + '.' + ext;
+    toast('Subiendo foto...');
+    fotoPromise = supaStorageUpload('fotos-mantenimiento', path, file).then(function(res) {
+      if (res.ok || res.status === 200) return supaStoragePublicUrl('fotos-mantenimiento', path);
+      return '';
+    }).catch(function() { return ''; });
+  } else {
+    fotoPromise = Promise.resolve('');
+  }
+  fotoPromise.then(function(fotoUrl) {
+    var row = { fecha: fecha, analista: analista, linea: l.nombre, zona: zona, descripcion: desc, estado: 'Pendiente' };
+    if (fotoUrl) row.foto_url = fotoUrl;
+    toast('Guardando solicitud...');
+    return insertarMant(row);
+  }).then(function(res) {
     btn.disabled = false;
     if (res.ok || res.status === 201) {
       toast('Solicitud enviada correctamente');
@@ -1046,6 +1144,7 @@ function enviarSolicitudMant() {
       document.getElementById('mant-linea').value = '';
       document.getElementById('mant-zona').innerHTML = '<option value="">-- Zona --</option>';
       document.getElementById('mant-desc').value = '';
+      mantQuitarFoto();
     } else {
       res.text().then(function(t) { toast('Error: ' + t); });
     }
@@ -1098,11 +1197,22 @@ function renderMantFiltrada() {
     for (var j = 0; j < regs.length; j++) {
       var r = regs[j];
       var pc = r.estado === 'Pendiente' ? 'pend' : r.estado === 'En proceso' ? 'proc' : 'cerr';
+      var safeUrl = r.foto_url ? escHtml(r.foto_url).replace(/'/g, '&#39;') : '';
+      var fotoHtml = r.foto_url
+        ? '<img src="' + safeUrl + '" class="foto-thumb" onclick="abrirFoto(\'' + safeUrl + '\')">'
+        : '';
+      var obsVal = escHtml(r.observaciones || '');
       h += '<div class="mant-card">' +
         '<div class="rtop"><div><div class="rfecha">' + escHtml(r.fecha) + ' — ' + escHtml(r.analista) + '</div>' +
         '<div class="rhora">' + escHtml(r.zona) + '</div></div>' +
         '<span class="mant-pill ' + pc + '">' + escHtml(r.estado) + '</span></div>' +
         '<div class="mant-desc">' + escHtml(r.descripcion) + '</div>' +
+        fotoHtml +
+        '<div class="obs-block">' +
+          '<div class="slbl" style="margin-bottom:6px">Observaciones</div>' +
+          '<textarea id="obs-' + r.id + '" class="finput obs-ta" placeholder="Agregar observación...">' + obsVal + '</textarea>' +
+          '<button class="obs-save-btn" onclick="guardarObsMant(' + r.id + ')">Guardar observación</button>' +
+        '</div>' +
         '<div class="estado-btns">' +
           mantEstadoBtn(r.id, 'Pendiente', r.estado) +
           mantEstadoBtn(r.id, 'En proceso', r.estado) +
