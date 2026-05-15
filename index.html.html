@@ -149,6 +149,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 .obs-block{margin-top:12px}
 .foto-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center}
 .foto-modal.open{display:-webkit-flex;display:flex}
+.edit-card-btn{background:none;border:none;padding:6px;cursor:pointer;color:#3D1F3D;opacity:0.6;line-height:0;border-radius:8px;-webkit-appearance:none;flex-shrink:0}
+.edit-card-btn:active{opacity:1;background:#F0EBF0}
+.edit-mant-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:8888;overflow-y:auto}
+.edit-mant-modal.open{display:block}
+.edit-mant-inner{background:#F5F0F5;min-height:100%}
+.edit-mant-hdr{position:sticky;top:0;background:#3D1F3D;color:#fff;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;padding:16px;font-size:16px;font-weight:600;z-index:1}
+.edit-mant-close{background:none;border:none;color:#fff;font-size:28px;cursor:pointer;padding:0;line-height:1;-webkit-appearance:none;font-family:inherit}
 </style>
 </head>
 <body>
@@ -309,6 +316,56 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 
 <div id="foto-modal" class="foto-modal" onclick="cerrarFotoModal()">
   <img id="foto-modal-img" src="" style="max-width:95%;max-height:90vh;border-radius:8px;object-fit:contain">
+</div>
+
+<div id="edit-mant-modal" class="edit-mant-modal">
+  <div class="edit-mant-inner">
+    <div class="edit-mant-hdr">
+      <span>Editar solicitud</span>
+      <button class="edit-mant-close" onclick="cerrarEditMant()">&#215;</button>
+    </div>
+    <div style="padding:16px">
+      <div class="card">
+        <input type="hidden" id="edit-mant-id">
+        <input type="hidden" id="edit-mant-foto-url-actual">
+        <div class="slbl">Fecha</div>
+        <input type="date" class="finput" id="edit-mant-fecha">
+        <div class="slbl" style="margin-top:16px">Analista</div>
+        <select class="finput" id="edit-mant-analista" style="margin-top:8px">
+          <option value="">-- Seleccionar analista --</option>
+          <option value="Angela">Angela</option>
+          <option value="Felipe">Felipe</option>
+          <option value="Fabian">Fabian</option>
+          <option value="David">David</option>
+          <option value="Juan Camilo">Juan Camilo</option>
+          <option value="Daniel">Daniel</option>
+          <option value="Giorgio">Giorgio</option>
+        </select>
+        <div class="slbl" style="margin-top:16px">L&#237;nea de producci&#243;n</div>
+        <select class="finput" id="edit-mant-linea" onchange="editMantCambiarLinea(this.value)" style="margin-top:8px">
+          <option value="">-- L&#237;nea --</option>
+        </select>
+        <div class="slbl" style="margin-top:16px">Zona</div>
+        <select class="finput" id="edit-mant-zona" style="margin-top:8px">
+          <option value="">-- Zona --</option>
+        </select>
+        <div class="slbl" style="margin-top:16px">Descripci&#243;n de la necesidad</div>
+        <textarea class="finput" id="edit-mant-desc" placeholder="Describe detalladamente la necesidad de mantenimiento..." style="margin-top:8px;resize:none;min-height:110px;line-height:1.5"></textarea>
+        <div class="slbl" style="margin-top:16px">Foto</div>
+        <div style="margin-top:8px">
+          <div id="edit-mant-foto-actual"></div>
+          <label for="edit-mant-foto" class="foto-upload-label" style="margin-top:8px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C85327" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Cambiar foto
+          </label>
+          <input type="file" id="edit-mant-foto" accept="image/*" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" onchange="editMantFotoPreview(this)">
+          <div id="edit-mant-foto-preview"></div>
+        </div>
+      </div>
+      <button class="btnm" id="btn-guardar-edit-mant" onclick="guardarEditMant()">Guardar cambios</button>
+      <div style="height:24px"></div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1007,6 +1064,9 @@ function actualizarEstadoMant(id, estado) {
 function actualizarObsMant(id, obs) {
   return supaFetch('mantenimiento?id=eq.' + id, 'PATCH', { observaciones: obs });
 }
+function actualizarMant(id, datos) {
+  return supaFetch('mantenimiento?id=eq.' + id, 'PATCH', datos);
+}
 
 function supaStorageUpload(bucket, path, file) {
   return fetch(SUPA_URL + '/storage/v1/object/' + bucket + '/' + encodeURIComponent(path), {
@@ -1057,6 +1117,146 @@ function guardarObsMant(id) {
       res.text().then(function(t) { toast('Error: ' + t); });
     }
   }).catch(function(err) { toast('Error: ' + err.message); });
+}
+
+function abrirEditMant(id) {
+  var r = null;
+  for (var i = 0; i < MANT.data.length; i++) {
+    if (MANT.data[i].id === id) { r = MANT.data[i]; break; }
+  }
+  if (!r) return;
+  document.getElementById('edit-mant-id').value = id;
+  document.getElementById('edit-mant-foto-url-actual').value = r.foto_url || '';
+  document.getElementById('edit-mant-fecha').value = r.fecha || '';
+  document.getElementById('edit-mant-analista').value = r.analista || '';
+  document.getElementById('edit-mant-desc').value = r.descripcion || '';
+  var selL = document.getElementById('edit-mant-linea');
+  if (selL.options.length <= 1) {
+    for (var i = 0; i < LINEAS.length; i++) {
+      var opt = document.createElement('option');
+      opt.value = LINEAS[i].id;
+      opt.textContent = LINEAS[i].nombre;
+      selL.appendChild(opt);
+    }
+  }
+  var lineaId = '';
+  for (var i = 0; i < LINEAS.length; i++) {
+    if (LINEAS[i].nombre === r.linea) { lineaId = LINEAS[i].id; break; }
+  }
+  selL.value = lineaId;
+  var selZ = document.getElementById('edit-mant-zona');
+  selZ.innerHTML = '<option value="">-- Zona --</option>';
+  if (lineaId) {
+    var l = getLinea(lineaId);
+    if (l) {
+      for (var i = 0; i < l.zonas.length; i++) {
+        var opt = document.createElement('option');
+        opt.value = l.zonas[i].nombre;
+        opt.textContent = l.zonas[i].nombre;
+        selZ.appendChild(opt);
+      }
+    }
+  }
+  selZ.value = r.zona || '';
+  var fotoActual = document.getElementById('edit-mant-foto-actual');
+  if (r.foto_url) {
+    var safeUrl = escHtml(r.foto_url).replace(/'/g, '&#39;');
+    fotoActual.innerHTML = '<div class="foto-prev-wrap"><img src="' + safeUrl + '" onclick="abrirFoto(\'' + safeUrl + '\')"><button class="foto-prev-clear" onclick="editMantQuitarFotoActual()">&#215;</button></div>';
+  } else {
+    fotoActual.innerHTML = '';
+  }
+  var fi = document.getElementById('edit-mant-foto');
+  if (fi) fi.value = '';
+  document.getElementById('edit-mant-foto-preview').innerHTML = '';
+  document.getElementById('edit-mant-modal').classList.add('open');
+}
+function cerrarEditMant() {
+  document.getElementById('edit-mant-modal').classList.remove('open');
+}
+function editMantCambiarLinea(val) {
+  var selZ = document.getElementById('edit-mant-zona');
+  selZ.innerHTML = '<option value="">-- Zona --</option>';
+  if (!val) return;
+  var l = getLinea(val);
+  if (!l) return;
+  for (var i = 0; i < l.zonas.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = l.zonas[i].nombre;
+    opt.textContent = l.zonas[i].nombre;
+    selZ.appendChild(opt);
+  }
+}
+function editMantFotoPreview(input) {
+  var prev = document.getElementById('edit-mant-foto-preview');
+  if (!input.files || !input.files[0]) { prev.innerHTML = ''; return; }
+  var url = URL.createObjectURL(input.files[0]);
+  prev.innerHTML = '<div class="foto-prev-wrap"><img src="' + url + '"><button class="foto-prev-clear" onclick="editMantQuitarFotoNueva()">&#215;</button></div>';
+}
+function editMantQuitarFotoNueva() {
+  var fi = document.getElementById('edit-mant-foto');
+  if (fi) fi.value = '';
+  document.getElementById('edit-mant-foto-preview').innerHTML = '';
+}
+function editMantQuitarFotoActual() {
+  document.getElementById('edit-mant-foto-url-actual').value = '';
+  document.getElementById('edit-mant-foto-actual').innerHTML = '';
+}
+function guardarEditMant() {
+  var id = parseInt(document.getElementById('edit-mant-id').value);
+  var fecha = document.getElementById('edit-mant-fecha').value;
+  var analista = document.getElementById('edit-mant-analista').value;
+  var lineaId = document.getElementById('edit-mant-linea').value;
+  var zona = document.getElementById('edit-mant-zona').value;
+  var desc = document.getElementById('edit-mant-desc').value.trim();
+  var fotoUrlActual = document.getElementById('edit-mant-foto-url-actual').value;
+  if (!fecha) { toast('Selecciona la fecha'); return; }
+  if (!analista) { toast('Selecciona el analista'); return; }
+  if (!lineaId) { toast('Selecciona la línea'); return; }
+  if (!zona) { toast('Selecciona la zona'); return; }
+  if (!desc) { toast('Ingresa la descripción'); return; }
+  var l = getLinea(lineaId);
+  var btn = document.getElementById('btn-guardar-edit-mant');
+  btn.disabled = true;
+  var fotoInput = document.getElementById('edit-mant-foto');
+  var fotoPromise;
+  if (fotoInput && fotoInput.files && fotoInput.files[0]) {
+    var file = fotoInput.files[0];
+    var nameParts = (file.name || 'foto.jpg').split('.');
+    var ext = nameParts.length > 1 ? nameParts[nameParts.length - 1] : 'jpg';
+    var path = Date.now() + '_' + Math.random().toString(36).substr(2, 8) + '.' + ext;
+    toast('Subiendo foto...');
+    fotoPromise = supaStorageUpload('fotos-mantenimiento', path, file).then(function(res) {
+      if (res.ok || res.status === 200) return supaStoragePublicUrl('fotos-mantenimiento', path);
+      return fotoUrlActual;
+    }).catch(function() { return fotoUrlActual; });
+  } else {
+    fotoPromise = Promise.resolve(fotoUrlActual);
+  }
+  fotoPromise.then(function(fotoUrl) {
+    var datos = { fecha: fecha, analista: analista, linea: l.nombre, zona: zona, descripcion: desc, foto_url: fotoUrl || null };
+    toast('Guardando cambios...');
+    return actualizarMant(id, datos).then(function(res) {
+      btn.disabled = false;
+      if (res.ok) {
+        for (var i = 0; i < MANT.data.length; i++) {
+          if (MANT.data[i].id === id) {
+            MANT.data[i].fecha = fecha;
+            MANT.data[i].analista = analista;
+            MANT.data[i].linea = l.nombre;
+            MANT.data[i].zona = zona;
+            MANT.data[i].descripcion = desc;
+            MANT.data[i].foto_url = fotoUrl || null;
+            break;
+          }
+        }
+        toast('Solicitud actualizada');
+        cerrarEditMant();
+        renderMantFiltrada();
+      } else {
+        res.text().then(function(t) { toast('Error: ' + t); });
+      }
+    });
+  }).catch(function(err) { btn.disabled = false; toast('Error: ' + err.message); });
 }
 
 function irMant() {
@@ -1205,7 +1405,10 @@ function renderMantFiltrada() {
       h += '<div class="mant-card">' +
         '<div class="rtop"><div><div class="rfecha">' + escHtml(r.fecha) + ' — ' + escHtml(r.analista) + '</div>' +
         '<div class="rhora">' + escHtml(r.zona) + '</div></div>' +
-        '<span class="mant-pill ' + pc + '">' + escHtml(r.estado) + '</span></div>' +
+        '<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:8px">' +
+        '<span class="mant-pill ' + pc + '">' + escHtml(r.estado) + '</span>' +
+        '<button class="edit-card-btn" onclick="abrirEditMant(' + r.id + ')" title="Editar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+        '</div></div>' +
         '<div class="mant-desc">' + escHtml(r.descripcion) + '</div>' +
         fotoHtml +
         '<div class="obs-block">' +
