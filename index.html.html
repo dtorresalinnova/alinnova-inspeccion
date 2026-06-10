@@ -156,6 +156,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 .edit-mant-inner{background:#F5F0F5;min-height:100%}
 .edit-mant-hdr{position:sticky;top:0;background:#3D1F3D;color:#fff;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;padding:16px;font-size:16px;font-weight:600;z-index:1}
 .edit-mant-close{background:none;border:none;color:#fff;font-size:28px;cursor:pointer;padding:0;line-height:1;-webkit-appearance:none;font-family:inherit}
+.rep-nav{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,0.07);padding:12px 14px;margin-bottom:16px}
+.rep-nav-btn{padding:8px 14px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:#3D1F3D;color:#fff;-webkit-appearance:none;font-family:inherit}
+.rep-nav-btn:active{background:#2A1030}
+.rep-rango{font-size:13px;font-weight:600;color:#2C2C2A;text-align:center;padding:0 6px;-webkit-flex:1;flex:1}
+.rep-card{background:#fff;border-radius:18px;border:1px solid rgba(0,0,0,0.07);padding:18px;margin-bottom:14px}
+.rep-card-tit{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#5F5E5A;margin-bottom:14px}
+.rep-linea-row{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;padding:14px 0;border-bottom:1px solid #F1EFE8;gap:12px}
+.rep-linea-row:last-child{border-bottom:none;padding-bottom:0}
+.rep-linea-name{-webkit-flex:1;flex:1;font-size:14px;font-weight:600;color:#2C2C2A}
+.rep-pct-badge{min-width:52px;text-align:center;font-size:17px;font-weight:700;padding:5px 10px;border-radius:10px}
+.rep-counts{font-size:11px;color:#888780;margin-top:3px;text-align:center}
+.rep-zona-tbl{width:100%;border-collapse:collapse}
+.rep-zona-tbl th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#888780;padding:0 4px 8px;text-align:left}
+.rep-zona-tbl td{font-size:12px;color:#2C2C2A;padding:7px 4px;border-top:1px solid #F1EFE8;vertical-align:middle}
+.rep-zona-grp{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#5F5E5A;padding:8px 0 4px;margin-top:4px;border-top:1px solid #F1EFE8}
+.rep-zona-grp.first{border-top:none;margin-top:0;padding-top:0}
+.rep-exp-btn{padding:7px 14px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;background:#3D1F3D;color:#fff;-webkit-appearance:none;font-family:inherit;flex-shrink:0}
+.rep-exp-btn:active{background:#2A1030}
 </style>
 </head>
 <body>
@@ -163,9 +181,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 
 <div id="s-inicio" class="screen active">
   <div class="hero">
-    <div class="herorow" style="gap:8px">
+    <div class="herorow" style="gap:8px;-webkit-flex-wrap:wrap;flex-wrap:wrap">
       <button class="tbact" onclick="irMant()">Mantenimiento</button>
       <button class="tbact" onclick="irDash()">Ver registros</button>
+      <button class="tbact" onclick="irRepSemanal()">&#128200; Reporte Semanal</button>
     </div>
     <div class="heroico">
       <span style="color:#fff;font-size:17px;font-weight:700;letter-spacing:4px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">ALINNOVA</span>
@@ -311,6 +330,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
       <div id="mant-lista"></div>
       <div style="height:24px"></div>
     </div>
+  </div>
+</div>
+
+</div>
+
+<div id="s-rep-semanal" class="screen">
+  <div class="topbar">
+    <button class="tbback" onclick="irInicio()">&#8249;</button>
+    <div class="tbinfo">
+      <div class="tbtitle">Reporte Semanal</div>
+      <div class="tbsub" id="rep-sub">Cargando...</div>
+    </div>
+  </div>
+  <div class="bp">
+    <div class="rep-nav">
+      <button class="rep-nav-btn" onclick="repNavSemana(-1)">&#9664; Anterior</button>
+      <div class="rep-rango" id="rep-rango-txt"></div>
+      <button class="rep-nav-btn" onclick="repNavSemana(1)">Siguiente &#9654;</button>
+    </div>
+    <div id="rep-body"></div>
+    <div style="height:24px"></div>
   </div>
 </div>
 
@@ -1452,6 +1492,251 @@ function cambiarEstadoMant(id, estado) {
 
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ---- REPORTE SEMANAL ---- */
+var REP = { offsetSemanas: -1, pregList: [] };
+
+function irRepSemanal() {
+  REP.offsetSemanas = -1;
+  showS('s-rep-semanal');
+  cargarRepSemanal();
+}
+
+function repNavSemana(dir) {
+  REP.offsetSemanas += dir;
+  cargarRepSemanal();
+}
+
+function repSemanaRango() {
+  var hoy = new Date();
+  var dow = hoy.getDay();
+  var diasALunes = (dow === 0) ? -6 : (1 - dow);
+  var lunes = new Date(hoy);
+  lunes.setDate(hoy.getDate() + diasALunes + REP.offsetSemanas * 7);
+  var domingo = new Date(lunes);
+  domingo.setDate(lunes.getDate() + 6);
+  return { inicio: repFmtFecha(lunes), fin: repFmtFecha(domingo) };
+}
+
+function repFmtFecha(d) {
+  var mm = d.getMonth() + 1;
+  var dd = d.getDate();
+  var yyyy = d.getFullYear();
+  return yyyy + '-' + (mm < 10 ? '0' : '') + mm + '-' + (dd < 10 ? '0' : '') + dd;
+}
+
+function repFmtCorto(s) {
+  return s.substr(8, 2) + '/' + s.substr(5, 2);
+}
+
+function repPctColor(p) {
+  if (p >= 90) return '#0F6B47';
+  if (p >= 70) return '#BA7517';
+  return '#A32D2D';
+}
+
+function repPctBg(p) {
+  if (p >= 90) return '#E1F5EE';
+  if (p >= 70) return '#FEF3E2';
+  return '#FCEBEB';
+}
+
+function cargarRepSemanal() {
+  var rango = repSemanaRango();
+  var txt = 'Semana del ' + repFmtCorto(rango.inicio) + ' al ' + repFmtCorto(rango.fin);
+  document.getElementById('rep-rango-txt').textContent = txt;
+  document.getElementById('rep-sub').textContent = txt;
+  document.getElementById('rep-body').innerHTML = '<div class="loading"><div class="spinner"></div>Cargando registros...</div>';
+  supaFetch('registros?fecha=gte.' + rango.inicio + '&fecha=lte.' + rango.fin + '&order=fecha.asc&limit=2000', 'GET')
+    .then(function(res) { return res.json(); })
+    .then(function(data) { renderRepSemanal(data || []); })
+    .catch(function(err) {
+      document.getElementById('rep-body').innerHTML = '<div class="empty"><div class="etxt">Error al cargar: ' + escHtml(err.message) + '</div></div>';
+    });
+}
+
+function renderRepSemanal(data) {
+  var el = document.getElementById('rep-body');
+  if (!data.length) {
+    el.innerHTML = '<div class="empty">' + IEMPTY + '<div class="etxt">Sin registros en esta semana.</div></div>';
+    return;
+  }
+
+  var porLinea = {};
+  var ordenLineas = [];
+  var porZona = {};
+  var porPregunta = {};
+
+  for (var i = 0; i < data.length; i++) {
+    var r = data[i];
+    var esCumple = r.respuesta === 'Cumple';
+    var esNoCumple = r.respuesta === 'No cumple';
+
+    if (!porLinea[r.linea]) {
+      porLinea[r.linea] = { ok: 0, nok: 0 };
+      ordenLineas.push(r.linea);
+    }
+    if (esCumple) porLinea[r.linea].ok++;
+    if (esNoCumple) porLinea[r.linea].nok++;
+
+    var zkey = r.linea + '||' + r.zona;
+    if (!porZona[zkey]) porZona[zkey] = { linea: r.linea, zona: r.zona, ok: 0, nok: 0 };
+    if (esCumple) porZona[zkey].ok++;
+    if (esNoCumple) porZona[zkey].nok++;
+
+    var pkey = r.linea + '||' + r.zona + '||' + r.pregunta;
+    if (!porPregunta[pkey]) porPregunta[pkey] = { linea: r.linea, zona: r.zona, pregunta: r.pregunta, ok: 0, nok: 0 };
+    if (esCumple) porPregunta[pkey].ok++;
+    if (esNoCumple) porPregunta[pkey].nok++;
+  }
+
+  var h = '';
+
+  /* ---- A) Por línea ---- */
+  h += '<div class="rep-card"><div class="rep-card-tit">A) Calificaci&#243;n por L&#237;nea</div>';
+  for (var i = 0; i < ordenLineas.length; i++) {
+    var ln = ordenLineas[i];
+    var ld = porLinea[ln];
+    var ltotal = ld.ok + ld.nok;
+    var lpct = ltotal > 0 ? Math.round(ld.ok / ltotal * 100) : 0;
+    var lcol = repPctColor(lpct);
+    var lbg = repPctBg(lpct);
+    h += '<div class="rep-linea-row">' +
+      '<div class="rep-linea-name">' + escHtml(ln) + '</div>' +
+      '<div>' +
+        '<div class="rep-pct-badge" style="background:' + lbg + ';color:' + lcol + '">' + lpct + '%</div>' +
+        '<div class="rep-counts">&#10003; ' + ld.ok + ' &nbsp; &#10007; ' + ld.nok + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+  h += '</div>';
+
+  /* ---- B) Por zona ---- */
+  var zonasPorLinea = {};
+  var zkeys = Object.keys(porZona);
+  for (var i = 0; i < zkeys.length; i++) {
+    var zd = porZona[zkeys[i]];
+    if (!zonasPorLinea[zd.linea]) zonasPorLinea[zd.linea] = [];
+    zonasPorLinea[zd.linea].push(zd);
+  }
+
+  h += '<div class="rep-card"><div class="rep-card-tit">B) Calificaci&#243;n por Zona</div>';
+  for (var i = 0; i < ordenLineas.length; i++) {
+    var ln = ordenLineas[i];
+    var zonas = zonasPorLinea[ln] || [];
+    var sorted = [];
+    for (var j = 0; j < zonas.length; j++) sorted.push(zonas[j]);
+    for (var sa = 0; sa < sorted.length - 1; sa++) {
+      for (var sb = sa + 1; sb < sorted.length; sb++) {
+        var ta = sorted[sa].ok + sorted[sa].nok;
+        var tb = sorted[sb].ok + sorted[sb].nok;
+        var pa = ta > 0 ? sorted[sa].ok / ta : 1;
+        var pb = tb > 0 ? sorted[sb].ok / tb : 1;
+        if (pa > pb) { var tmp = sorted[sa]; sorted[sa] = sorted[sb]; sorted[sb] = tmp; }
+      }
+    }
+    h += '<div class="rep-zona-grp' + (i === 0 ? ' first' : '') + '">' + escHtml(ln) + '</div>';
+    h += '<table class="rep-zona-tbl"><thead><tr>' +
+      '<th>Zona</th>' +
+      '<th style="text-align:center">Cumplen</th>' +
+      '<th style="text-align:center">No cumplen</th>' +
+      '<th style="text-align:right">%</th>' +
+    '</tr></thead><tbody>';
+    for (var j = 0; j < sorted.length; j++) {
+      var zd = sorted[j];
+      var ztotal = zd.ok + zd.nok;
+      var zpct = ztotal > 0 ? Math.round(zd.ok / ztotal * 100) : 0;
+      var zcol = repPctColor(zpct);
+      var zbg = repPctBg(zpct);
+      h += '<tr>' +
+        '<td>' + escHtml(zd.zona) + '</td>' +
+        '<td style="text-align:center;color:#0F6B47;font-weight:600">' + zd.ok + '</td>' +
+        '<td style="text-align:center;color:#A32D2D;font-weight:600">' + zd.nok + '</td>' +
+        '<td style="text-align:right"><span style="font-weight:700;font-size:13px;color:' + zcol + ';background:' + zbg + ';padding:3px 8px;border-radius:8px;display:inline-block">' + zpct + '%</span></td>' +
+      '</tr>';
+    }
+    h += '</tbody></table>';
+  }
+  h += '</div>';
+
+  /* ---- C) Detalle de mejoras por pregunta ---- */
+  var pregList = [];
+  var pkeys = Object.keys(porPregunta);
+  for (var i = 0; i < pkeys.length; i++) {
+    var pd = porPregunta[pkeys[i]];
+    if (pd.nok > 0) pregList.push(pd);
+  }
+  for (var sa = 0; sa < pregList.length - 1; sa++) {
+    for (var sb = sa + 1; sb < pregList.length; sb++) {
+      if (pregList[sb].nok > pregList[sa].nok) {
+        var tmp = pregList[sa]; pregList[sa] = pregList[sb]; pregList[sb] = tmp;
+      }
+    }
+  }
+  REP.pregList = pregList;
+
+  h += '<div class="rep-card">';
+  h += '<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;margin-bottom:14px">';
+  h += '<div class="rep-card-tit" style="margin-bottom:0">C) Oportunidades de Mejora</div>';
+  if (pregList.length > 0) {
+    h += '<button class="rep-exp-btn" onclick="repExportCSV()">Exportar CSV</button>';
+  }
+  h += '</div>';
+
+  if (!pregList.length) {
+    h += '<div class="empty" style="padding:24px 0">' + IEMPTY + '<div class="etxt">Sin incumplimientos esta semana.</div></div>';
+  } else {
+    for (var i = 0; i < pregList.length; i++) {
+      var pd = pregList[i];
+      var ptotal = pd.ok + pd.nok;
+      var ppct = ptotal > 0 ? Math.round(pd.ok / ptotal * 100) : 0;
+      var pcol = repPctColor(ppct);
+      var pbg = repPctBg(ppct);
+      var borderBottom = (i < pregList.length - 1) ? 'border-bottom:1px solid #F1EFE8;' : '';
+      h += '<div style="padding:12px 0;' + borderBottom + '">' +
+        '<div style="display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:5px">' +
+          '<div style="font-size:13px;font-weight:600;color:#2C2C2A;-webkit-flex:1;flex:1;padding-right:10px;line-height:1.4">' + escHtml(pd.pregunta) + '</div>' +
+          '<span style="font-size:13px;font-weight:700;color:' + pcol + ';background:' + pbg + ';padding:3px 8px;border-radius:8px;flex-shrink:0">' + ppct + '%</span>' +
+        '</div>' +
+        '<div style="font-size:11px;color:#888780;margin-bottom:5px">' + escHtml(pd.linea) + ' &mdash; ' + escHtml(pd.zona) + '</div>' +
+        '<div style="display:-webkit-flex;display:flex;gap:14px;font-size:12px">' +
+          '<span style="color:#0F6B47;font-weight:600">&#10003; Cumplen: ' + pd.ok + '</span>' +
+          '<span style="color:#A32D2D;font-weight:600">&#10007; No cumplen: ' + pd.nok + '</span>' +
+        '</div>' +
+      '</div>';
+    }
+  }
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function repExportCSV() {
+  if (!REP.pregList || !REP.pregList.length) { toast('Sin datos para exportar'); return; }
+  var rows = [['Linea', 'Zona', 'Pregunta', 'No Cumple', 'Cumple', '% Cumplimiento']];
+  for (var i = 0; i < REP.pregList.length; i++) {
+    var pd = REP.pregList[i];
+    var ptotal = pd.ok + pd.nok;
+    var ppct = ptotal > 0 ? Math.round(pd.ok / ptotal * 100) : 0;
+    rows.push([pd.linea, pd.zona, pd.pregunta, pd.nok, pd.ok, ppct + '%']);
+  }
+  var csv = '';
+  for (var i = 0; i < rows.length; i++) {
+    var row = '';
+    for (var j = 0; j < rows[i].length; j++) {
+      if (j > 0) row += ',';
+      row += '"' + String(rows[i][j] || '').replace(/"/g, '""') + '"';
+    }
+    csv += row + '\n';
+  }
+  var rango = repSemanaRango();
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + csv], {type: 'text/csv;charset=utf-8;'}));
+  a.download = 'reporte_semanal_' + rango.inicio + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  toast('CSV descargado');
 }
 
 function toast(msg) {
