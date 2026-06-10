@@ -1695,38 +1695,62 @@ function renderRepSemanal(data) {
   }
   h += '</div>';
 
-  /* ---- C) Detalle de mejoras por pregunta ---- */
-  // Agrupar preguntas con nok > 0 por línea
-  var pregPorLinea = {};
+  /* ---- C) Detalle de mejoras por pregunta (consolidado por linea+pregunta) ---- */
+  // Consolidar por linea+pregunta acumulando zonas
+  var porPregCons = {};
   var pkeys = Object.keys(porPregunta);
   for (var i = 0; i < pkeys.length; i++) {
     var pd = porPregunta[pkeys[i]];
     if (pd.nok > 0) {
-      if (!pregPorLinea[pd.linea]) pregPorLinea[pd.linea] = [];
-      pregPorLinea[pd.linea].push(pd);
+      var ckey = pd.linea + '||' + pd.pregunta;
+      if (!porPregCons[ckey]) {
+        porPregCons[ckey] = { linea: pd.linea, pregunta: pd.pregunta, ok: 0, nok: 0, zonas: [] };
+      }
+      porPregCons[ckey].ok += pd.ok;
+      porPregCons[ckey].nok += pd.nok;
+      porPregCons[ckey].zonas.push({ zona: pd.zona, ok: pd.ok, nok: pd.nok });
     }
   }
-  // Ordenar preguntas dentro de cada línea: más nok primero
-  for (var i = 0; i < ordenLineas.length; i++) {
-    var lpregs = pregPorLinea[ordenLineas[i]] || [];
-    for (var sa = 0; sa < lpregs.length - 1; sa++) {
-      for (var sb = sa + 1; sb < lpregs.length; sb++) {
-        if (lpregs[sb].nok > lpregs[sa].nok) {
-          var tmp = lpregs[sa]; lpregs[sa] = lpregs[sb]; lpregs[sb] = tmp;
+  // Ordenar zonas dentro de cada entrada consolidada: más nok primero
+  var ckeys = Object.keys(porPregCons);
+  for (var i = 0; i < ckeys.length; i++) {
+    var cp = porPregCons[ckeys[i]];
+    for (var sa = 0; sa < cp.zonas.length - 1; sa++) {
+      for (var sb = sa + 1; sb < cp.zonas.length; sb++) {
+        if (cp.zonas[sb].nok > cp.zonas[sa].nok) {
+          var tmp = cp.zonas[sa]; cp.zonas[sa] = cp.zonas[sb]; cp.zonas[sb] = tmp;
         }
       }
     }
-    pregPorLinea[ordenLineas[i]] = lpregs;
   }
-  // Construir bloques de línea solo con nok, ordenados: más nok total primero
+  // Agrupar entradas consolidadas por línea
+  var consPorLinea = {};
+  for (var i = 0; i < ckeys.length; i++) {
+    var cp = porPregCons[ckeys[i]];
+    if (!consPorLinea[cp.linea]) consPorLinea[cp.linea] = [];
+    consPorLinea[cp.linea].push(cp);
+  }
+  // Ordenar preguntas dentro de cada línea: más nok total primero
+  for (var i = 0; i < ordenLineas.length; i++) {
+    var lcpregs = consPorLinea[ordenLineas[i]] || [];
+    for (var sa = 0; sa < lcpregs.length - 1; sa++) {
+      for (var sb = sa + 1; sb < lcpregs.length; sb++) {
+        if (lcpregs[sb].nok > lcpregs[sa].nok) {
+          var tmp = lcpregs[sa]; lcpregs[sa] = lcpregs[sb]; lcpregs[sb] = tmp;
+        }
+      }
+    }
+    consPorLinea[ordenLineas[i]] = lcpregs;
+  }
+  // Construir bloques de línea ordenados: más nok total primero
   var bloques = [];
   for (var i = 0; i < ordenLineas.length; i++) {
     var ln = ordenLineas[i];
-    var lpregs = pregPorLinea[ln] || [];
-    if (lpregs.length > 0) {
+    var lcpregs = consPorLinea[ln] || [];
+    if (lcpregs.length > 0) {
       var totalNok = 0;
-      for (var j = 0; j < lpregs.length; j++) totalNok += lpregs[j].nok;
-      bloques.push({ linea: ln, pregs: lpregs, totalNok: totalNok });
+      for (var j = 0; j < lcpregs.length; j++) totalNok += lcpregs[j].nok;
+      bloques.push({ linea: ln, pregs: lcpregs, totalNok: totalNok });
     }
   }
   for (var sa = 0; sa < bloques.length - 1; sa++) {
@@ -1736,10 +1760,16 @@ function renderRepSemanal(data) {
       }
     }
   }
-  // Lista plana en el orden final (para CSV)
+  // Lista plana por zona para CSV (detalle fino, mismo orden de display)
   var pregList = [];
   for (var i = 0; i < bloques.length; i++) {
-    for (var j = 0; j < bloques[i].pregs.length; j++) pregList.push(bloques[i].pregs[j]);
+    for (var j = 0; j < bloques[i].pregs.length; j++) {
+      var cp = bloques[i].pregs[j];
+      for (var k = 0; k < cp.zonas.length; k++) {
+        var detKey = cp.linea + '||' + cp.zonas[k].zona + '||' + cp.pregunta;
+        if (porPregunta[detKey]) pregList.push(porPregunta[detKey]);
+      }
+    }
   }
   REP.pregList = pregList;
 
@@ -1758,22 +1788,28 @@ function renderRepSemanal(data) {
       var bloque = bloques[i];
       h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#3D1F3D;background:#F0EBF0;padding:7px 12px;border-radius:8px;margin:' + (i === 0 ? '0' : '16px') + ' 0 10px">' + escHtml(bloque.linea) + '</div>';
       for (var j = 0; j < bloque.pregs.length; j++) {
-        var pd = bloque.pregs[j];
-        var ptotal = pd.ok + pd.nok;
-        var ppct = ptotal > 0 ? Math.round(pd.ok / ptotal * 100) : 0;
+        var cp = bloque.pregs[j];
+        var ptotal = cp.ok + cp.nok;
+        var ppct = ptotal > 0 ? Math.round(cp.ok / ptotal * 100) : 0;
         var pcol = repPctColor(ppct);
         var pbg = repPctBg(ppct);
         var borderBottom = (j < bloque.pregs.length - 1) ? 'border-bottom:1px solid #F1EFE8;' : '';
+        // Zonas: "CF PT Gastronomia (6) · Zona de recibo (5)"
+        var zonasStr = '';
+        for (var k = 0; k < cp.zonas.length; k++) {
+          if (k > 0) zonasStr += ' &middot; ';
+          zonasStr += escHtml(cp.zonas[k].zona) + ' (' + cp.zonas[k].nok + ')';
+        }
         h += '<div class="rep-preg-item" style="padding:12px 0;' + borderBottom + '">' +
-          '<div style="display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:5px">' +
-            '<div style="font-size:13px;font-weight:600;color:#2C2C2A;-webkit-flex:1;flex:1;padding-right:10px;line-height:1.4">' + escHtml(pd.pregunta) + '</div>' +
+          '<div style="display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:6px">' +
+            '<div style="font-size:13px;font-weight:600;color:#2C2C2A;-webkit-flex:1;flex:1;padding-right:10px;line-height:1.4">' + escHtml(cp.pregunta) + '</div>' +
             '<span style="font-size:13px;font-weight:700;color:' + pcol + ';background:' + pbg + ';padding:3px 8px;border-radius:8px;flex-shrink:0">' + ppct + '%</span>' +
           '</div>' +
-          '<div style="font-size:11px;color:#888780;margin-bottom:5px">' + escHtml(pd.zona) + '</div>' +
-          '<div style="display:-webkit-flex;display:flex;gap:14px;font-size:12px">' +
-            '<span style="color:#0F6B47;font-weight:600">&#10003; Cumplen: ' + pd.ok + '</span>' +
-            '<span style="color:#A32D2D;font-weight:600">&#10007; No cumplen: ' + pd.nok + '</span>' +
+          '<div style="display:-webkit-flex;display:flex;gap:14px;font-size:12px;margin-bottom:6px">' +
+            '<span style="color:#0F6B47;font-weight:600">&#10003; ' + cp.ok + '</span>' +
+            '<span style="color:#A32D2D;font-weight:600">&#10007; ' + cp.nok + '</span>' +
           '</div>' +
+          '<div style="font-size:11px;color:#888780;line-height:1.7">' + zonasStr + '</div>' +
         '</div>';
       }
     }
