@@ -1501,10 +1501,12 @@ function irRepSemanal() {
   REP.offsetSemanas = -1;
   showS('s-rep-semanal');
   cargarRepSemanal();
+  window.scrollTo(0, 0);
 }
 
 function repNavSemana(dir) {
   REP.offsetSemanas += dir;
+  window.scrollTo(0, 0);
   cargarRepSemanal();
 }
 
@@ -1548,6 +1550,7 @@ function cargarRepSemanal() {
   document.getElementById('rep-rango-txt').textContent = txt;
   document.getElementById('rep-sub').textContent = txt;
   document.getElementById('rep-body').innerHTML = '<div class="loading"><div class="spinner"></div>Cargando registros...</div>';
+  window.scrollTo(0, 0);
   supaFetch('registros?fecha=gte.' + rango.inicio + '&fecha=lte.' + rango.fin + '&order=fecha.asc&limit=2000', 'GET')
     .then(function(res) { return res.json(); })
     .then(function(data) { renderRepSemanal(data || []); })
@@ -1709,6 +1712,7 @@ function renderRepSemanal(data) {
   }
   h += '</div>';
   el.innerHTML = h;
+  window.scrollTo(0, 0);
 }
 
 function repExportCSV() {
