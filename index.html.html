@@ -174,6 +174,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 .rep-zona-grp.first{border-top:none;margin-top:0;padding-top:0}
 .rep-exp-btn{padding:7px 14px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;background:#3D1F3D;color:#fff;-webkit-appearance:none;font-family:inherit;flex-shrink:0}
 .rep-exp-btn:active{background:#2A1030}
+.rep-pdf-btn{width:100%;padding:11px;border:1.5px solid #3D1F3D;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#3D1F3D;-webkit-appearance:none;font-family:inherit;margin-bottom:16px;display:block}
+.rep-pdf-btn:active{background:#F0EBF0}
+.rep-pdf-btn:disabled{opacity:0.35;cursor:default}
+#rep-print-header{display:none}
+@media print{
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
+  html,body{height:auto !important;background:#fff !important}
+  #app{max-width:100% !important;margin:0 !important;min-height:0 !important;background:#fff !important}
+  .toast,#foto-modal,#edit-mant-modal{display:none !important}
+  .topbar,.rep-nav,#btn-rep-pdf,.rep-exp-btn{display:none !important}
+  #rep-print-header{display:block !important}
+  .bp{padding:10px 14px !important}
+  .rep-card{break-inside:avoid;page-break-inside:avoid;border:1px solid #ddd !important;border-radius:8px !important;margin-bottom:12px !important}
+  .rep-zona-tbl tr{break-inside:avoid;page-break-inside:avoid}
+  .rep-preg-item{break-inside:avoid;page-break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -342,11 +358,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
     </div>
   </div>
   <div class="bp">
+    <div id="rep-print-header">
+      <div style="font-size:18px;font-weight:700;color:#3D1F3D;margin-bottom:3px">ALINNOVA SAS &mdash; Ruta de Inspecci&#243;n</div>
+      <div id="rep-print-rango" style="font-size:14px;font-weight:600;color:#2C2C2A;margin-bottom:2px"></div>
+      <div id="rep-print-fecha" style="font-size:11px;color:#5F5E5A;padding-bottom:12px;border-bottom:2px solid #3D1F3D;margin-bottom:16px"></div>
+    </div>
     <div class="rep-nav">
       <button class="rep-nav-btn" onclick="repNavSemana(-1)">&#9664; Anterior</button>
       <div class="rep-rango" id="rep-rango-txt"></div>
       <button class="rep-nav-btn" onclick="repNavSemana(1)">Siguiente &#9654;</button>
     </div>
+    <button class="rep-pdf-btn" id="btn-rep-pdf" onclick="repImprimirPDF()" disabled>&#128196; Descargar PDF</button>
     <div id="rep-body"></div>
     <div style="height:24px"></div>
   </div>
@@ -1547,6 +1569,16 @@ function cargarRepSemanal() {
   var txt = 'Semana del ' + repFmtCorto(rango.inicio) + ' al ' + repFmtCorto(rango.fin);
   document.getElementById('rep-rango-txt').textContent = txt;
   document.getElementById('rep-sub').textContent = txt;
+  var prEl = document.getElementById('rep-print-rango');
+  if (prEl) prEl.textContent = txt;
+  var pfEl = document.getElementById('rep-print-fecha');
+  if (pfEl) {
+    var hoyP = new Date();
+    var mmP = hoyP.getMonth()+1; var ddP = hoyP.getDate(); var yyyyP = hoyP.getFullYear();
+    pfEl.textContent = 'Generado el ' + (ddP<10?'0':'')+ddP+'/'+(mmP<10?'0':'')+mmP+'/'+yyyyP;
+  }
+  var pdfBtn = document.getElementById('btn-rep-pdf');
+  if (pdfBtn) pdfBtn.disabled = true;
   document.getElementById('rep-body').innerHTML = '<div class="loading"><div class="spinner"></div>Cargando registros...</div>';
   window.scrollTo(0, 0);
   supaFetch('registros?fecha=gte.' + rango.inicio + '&fecha=lte.' + rango.fin + '&order=fecha.asc&limit=2000', 'GET')
@@ -1559,8 +1591,10 @@ function cargarRepSemanal() {
 
 function renderRepSemanal(data) {
   var el = document.getElementById('rep-body');
+  var pdfBtn = document.getElementById('btn-rep-pdf');
   if (!data.length) {
     el.innerHTML = '<div class="empty">' + IEMPTY + '<div class="etxt">Sin registros en esta semana.</div></div>';
+    if (pdfBtn) pdfBtn.disabled = true;
     return;
   }
 
@@ -1730,7 +1764,7 @@ function renderRepSemanal(data) {
         var pcol = repPctColor(ppct);
         var pbg = repPctBg(ppct);
         var borderBottom = (j < bloque.pregs.length - 1) ? 'border-bottom:1px solid #F1EFE8;' : '';
-        h += '<div style="padding:12px 0;' + borderBottom + '">' +
+        h += '<div class="rep-preg-item" style="padding:12px 0;' + borderBottom + '">' +
           '<div style="display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:5px">' +
             '<div style="font-size:13px;font-weight:600;color:#2C2C2A;-webkit-flex:1;flex:1;padding-right:10px;line-height:1.4">' + escHtml(pd.pregunta) + '</div>' +
             '<span style="font-size:13px;font-weight:700;color:' + pcol + ';background:' + pbg + ';padding:3px 8px;border-radius:8px;flex-shrink:0">' + ppct + '%</span>' +
@@ -1746,7 +1780,12 @@ function renderRepSemanal(data) {
   }
   h += '</div>';
   el.innerHTML = h;
+  if (pdfBtn) pdfBtn.disabled = false;
   window.scrollTo(0, 0);
+}
+
+function repImprimirPDF() {
+  window.print();
 }
 
 function repExportCSV() {
