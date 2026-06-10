@@ -1564,6 +1564,144 @@ function repPctBg(p) {
   return '#FCEBEB';
 }
 
+function repFechaALunes(fechaStr) {
+  var d = new Date(fechaStr + 'T00:00:00');
+  var dow = d.getDay();
+  var diasALunes = (dow === 0) ? -6 : (1 - dow);
+  var lunes = new Date(d);
+  lunes.setDate(d.getDate() + diasALunes);
+  return repFmtFecha(lunes);
+}
+
+function repOchoSemanas() {
+  var rango = repSemanaRango();
+  var lunes = new Date(rango.inicio + 'T00:00:00');
+  var lunesInicio = new Date(lunes);
+  lunesInicio.setDate(lunes.getDate() - 49);
+  return { inicio: repFmtFecha(lunesInicio), fin: rango.fin };
+}
+
+function repHtmlTendencia(data) {
+  var linNombres = ['Gastronomia', 'Ensamble y Refrigerios', 'Panaderia'];
+  var linColores = ['#1D9E75', '#2563EB', '#C85327'];
+
+  var wstats = {};
+  for (var i = 0; i < data.length; i++) {
+    var r = data[i];
+    var lun = repFechaALunes(r.fecha);
+    if (!wstats[lun]) wstats[lun] = {};
+    if (!wstats[lun][r.linea]) wstats[lun][r.linea] = { ok: 0, nok: 0 };
+    if (r.respuesta === 'Cumple') wstats[lun][r.linea].ok++;
+    if (r.respuesta === 'No cumple') wstats[lun][r.linea].nok++;
+  }
+
+  var rng = repSemanaRango();
+  var lunesBase = new Date(rng.inicio + 'T00:00:00');
+  var semanas = [];
+  for (var w = 7; w >= 0; w--) {
+    var ld = new Date(lunesBase);
+    ld.setDate(lunesBase.getDate() - w * 7);
+    var ls = repFmtFecha(ld);
+    semanas.push({ lunes: ls, label: repFmtCorto(ls) });
+  }
+
+  var W = 460, H = 186, ML = 34, MR = 8, MT = 14, MB = 32;
+  var PW = W - ML - MR;
+  var PH = H - MT - MB;
+  var N = semanas.length;
+
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;display:block;overflow:visible">';
+
+  var yticks = [0, 25, 50, 75, 100];
+  for (var ti = 0; ti < yticks.length; ti++) {
+    var yv = yticks[ti];
+    var ty = Math.round(MT + PH - (yv / 100 * PH));
+    svg += '<line x1="' + ML + '" y1="' + ty + '" x2="' + (W - MR) + '" y2="' + ty + '" stroke="#E8E6DF" stroke-width="' + (yv === 0 ? '1.5' : '1') + '"/>';
+    svg += '<text x="' + (ML - 4) + '" y="' + (ty + 4) + '" text-anchor="end" font-size="9" fill="#888780" font-family="inherit">' + yv + '</text>';
+  }
+
+  for (var si = 0; si < semanas.length; si++) {
+    var sx = Math.round(ML + si * PW / (N - 1));
+    var isCurLbl = (si === semanas.length - 1);
+    svg += '<text x="' + sx + '" y="' + (H - MB + 14) + '" text-anchor="middle" font-size="9" fill="' + (isCurLbl ? '#3D1F3D' : '#888780') + '" font-weight="' + (isCurLbl ? '700' : '400') + '" font-family="inherit">' + semanas[si].label + '</text>';
+  }
+
+  for (var li = 0; li < linNombres.length; li++) {
+    var linNom = linNombres[li];
+    var linCol = linColores[li];
+    var pathD = '';
+    var lastConn = false;
+    for (var si = 0; si < semanas.length; si++) {
+      var sem = semanas[si];
+      var hasDato = wstats[sem.lunes] && wstats[sem.lunes][linNom];
+      if (!hasDato) { lastConn = false; continue; }
+      var st = wstats[sem.lunes][linNom];
+      var tot = st.ok + st.nok;
+      if (tot === 0) { lastConn = false; continue; }
+      var pct = Math.round(st.ok / tot * 100);
+      var px = Math.round(ML + si * PW / (N - 1));
+      var py = Math.round(MT + PH - (pct / 100 * PH));
+      pathD += (lastConn ? 'L ' : 'M ') + px + ' ' + py + ' ';
+      lastConn = true;
+    }
+    if (pathD) {
+      svg += '<path d="' + pathD + '" fill="none" stroke="' + linCol + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+    }
+    for (var si = 0; si < semanas.length; si++) {
+      var sem = semanas[si];
+      var hasDato = wstats[sem.lunes] && wstats[sem.lunes][linNom];
+      if (!hasDato) continue;
+      var st = wstats[sem.lunes][linNom];
+      var tot = st.ok + st.nok;
+      if (tot === 0) continue;
+      var pct = Math.round(st.ok / tot * 100);
+      var px = Math.round(ML + si * PW / (N - 1));
+      var py = Math.round(MT + PH - (pct / 100 * PH));
+      var isCurDot = (si === semanas.length - 1);
+      svg += '<circle cx="' + px + '" cy="' + py + '" r="' + (isCurDot ? 5 : 3.5) + '" fill="' + linCol + '" stroke="#fff" stroke-width="1.5"/>';
+    }
+  }
+  svg += '</svg>';
+
+  var lunesCurrent = rng.inicio;
+  var lcDate = new Date(lunesCurrent + 'T00:00:00');
+  var lpDate = new Date(lcDate);
+  lpDate.setDate(lcDate.getDate() - 7);
+  var lunesPrevStr = repFmtFecha(lpDate);
+
+  var indicadores = '';
+  for (var li = 0; li < linNombres.length; li++) {
+    var linNom = linNombres[li];
+    var linCol = linColores[li];
+    var curSt = (wstats[lunesCurrent] && wstats[lunesCurrent][linNom]) ? wstats[lunesCurrent][linNom] : null;
+    var prevSt = (wstats[lunesPrevStr] && wstats[lunesPrevStr][linNom]) ? wstats[lunesPrevStr][linNom] : null;
+    var curPct = null;
+    var prevPct = null;
+    if (curSt) { var curTot = curSt.ok + curSt.nok; if (curTot > 0) curPct = Math.round(curSt.ok / curTot * 100); }
+    if (prevSt) { var prevTot = prevSt.ok + prevSt.nok; if (prevTot > 0) prevPct = Math.round(prevSt.ok / prevTot * 100); }
+    var pctTxt = (curPct !== null) ? curPct + '%' : '—';
+    var varHtml = '';
+    if (curPct !== null && prevPct !== null) {
+      var diff = curPct - prevPct;
+      if (diff > 0) varHtml = '<span style="color:#0F6B47;font-size:11px;font-weight:600;margin-left:5px">&#9650; +' + diff + '%</span>';
+      else if (diff < 0) varHtml = '<span style="color:#A32D2D;font-size:11px;font-weight:600;margin-left:5px">&#9660; ' + diff + '%</span>';
+      else varHtml = '<span style="color:#888780;font-size:11px;font-weight:600;margin-left:5px">&#9654; 0%</span>';
+    }
+    indicadores += '<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:8px;padding:6px 0;' + (li < linNombres.length - 1 ? 'border-bottom:1px solid #F1EFE8;' : '') + '">' +
+      '<div style="width:10px;height:10px;border-radius:3px;background:' + linCol + ';flex-shrink:0"></div>' +
+      '<div style="font-size:12px;color:#2C2C2A;-webkit-flex:1;flex:1">' + escHtml(linNom) + '</div>' +
+      '<div style="font-size:15px;font-weight:700;color:' + (curPct !== null ? repPctColor(curPct) : '#888780') + '">' + pctTxt + '</div>' +
+      varHtml +
+    '</div>';
+  }
+
+  return '<div class="rep-card">' +
+    '<div class="rep-card-tit">Tendencia Semanal (&#250;ltimas 8 semanas)</div>' +
+    svg +
+    '<div style="margin-top:14px">' + indicadores + '</div>' +
+  '</div>';
+}
+
 function cargarRepSemanal() {
   var rango = repSemanaRango();
   var txt = 'Semana del ' + repFmtCorto(rango.inicio) + ' al ' + repFmtCorto(rango.fin);
@@ -1581,7 +1719,8 @@ function cargarRepSemanal() {
   if (pdfBtn) pdfBtn.disabled = true;
   document.getElementById('rep-body').innerHTML = '<div class="loading"><div class="spinner"></div>Cargando registros...</div>';
   window.scrollTo(0, 0);
-  supaFetch('registros?fecha=gte.' + rango.inicio + '&fecha=lte.' + rango.fin + '&order=fecha.asc&limit=2000', 'GET')
+  var ocho = repOchoSemanas();
+  supaFetch('registros?fecha=gte.' + ocho.inicio + '&fecha=lte.' + ocho.fin + '&order=fecha.asc&limit=10000', 'GET')
     .then(function(res) { return res.json(); })
     .then(function(data) { renderRepSemanal(data || []); })
     .catch(function(err) {
@@ -1592,9 +1731,22 @@ function cargarRepSemanal() {
 function renderRepSemanal(data) {
   var el = document.getElementById('rep-body');
   var pdfBtn = document.getElementById('btn-rep-pdf');
+  var rango = repSemanaRango();
+  var dataSemana = [];
+  for (var i = 0; i < data.length; i++) {
+    if (data[i].fecha >= rango.inicio && data[i].fecha <= rango.fin) dataSemana.push(data[i]);
+  }
   if (!data.length) {
-    el.innerHTML = '<div class="empty">' + IEMPTY + '<div class="etxt">Sin registros en esta semana.</div></div>';
+    el.innerHTML = '<div class="empty">' + IEMPTY + '<div class="etxt">Sin registros en las &#250;ltimas 8 semanas.</div></div>';
     if (pdfBtn) pdfBtn.disabled = true;
+    return;
+  }
+  var h = repHtmlTendencia(data);
+  if (!dataSemana.length) {
+    h += '<div class="rep-card" style="text-align:center;padding:24px 16px;color:#5F5E5A;font-size:14px">Sin registros en esta semana.</div>';
+    el.innerHTML = h;
+    if (pdfBtn) pdfBtn.disabled = true;
+    window.scrollTo(0, 0);
     return;
   }
 
@@ -1603,8 +1755,8 @@ function renderRepSemanal(data) {
   var porZona = {};
   var porPregunta = {};
 
-  for (var i = 0; i < data.length; i++) {
-    var r = data[i];
+  for (var i = 0; i < dataSemana.length; i++) {
+    var r = dataSemana[i];
     var esCumple = r.respuesta === 'Cumple';
     var esNoCumple = r.respuesta === 'No cumple';
 
@@ -1625,8 +1777,6 @@ function renderRepSemanal(data) {
     if (esCumple) porPregunta[pkey].ok++;
     if (esNoCumple) porPregunta[pkey].nok++;
   }
-
-  var h = '';
 
   /* ---- A) Por línea ---- */
   h += '<div class="rep-card"><div class="rep-card-tit">A) Calificaci&#243;n por L&#237;nea</div>';
