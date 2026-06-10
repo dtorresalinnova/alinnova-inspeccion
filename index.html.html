@@ -1574,11 +1574,16 @@ function repFechaALunes(fechaStr) {
 }
 
 function repOchoSemanas() {
-  var rango = repSemanaRango();
-  var lunes = new Date(rango.inicio + 'T00:00:00');
-  var lunesInicio = new Date(lunes);
-  lunesInicio.setDate(lunes.getDate() - 49);
-  return { inicio: repFmtFecha(lunesInicio), fin: rango.fin };
+  var hoy = new Date();
+  var dow = hoy.getDay();
+  var diasALunes = (dow === 0) ? -6 : (1 - dow);
+  var lunesHoy = new Date(hoy);
+  lunesHoy.setDate(hoy.getDate() + diasALunes);
+  var lunesInicio = new Date(lunesHoy);
+  lunesInicio.setDate(lunesHoy.getDate() - 49);
+  var domingo = new Date(lunesHoy);
+  domingo.setDate(lunesHoy.getDate() + 6);
+  return { inicio: repFmtFecha(lunesInicio), fin: repFmtFecha(domingo) };
 }
 
 function repHtmlTendencia(data) {
@@ -1595,8 +1600,11 @@ function repHtmlTendencia(data) {
     if (r.respuesta === 'No cumple') wstats[lun][r.linea].nok++;
   }
 
-  var rng = repSemanaRango();
-  var lunesBase = new Date(rng.inicio + 'T00:00:00');
+  var hoyT = new Date();
+  var dowT = hoyT.getDay();
+  var dalT = (dowT === 0) ? -6 : (1 - dowT);
+  var lunesBase = new Date(hoyT);
+  lunesBase.setDate(hoyT.getDate() + dalT);
   var semanas = [];
   for (var w = 7; w >= 0; w--) {
     var ld = new Date(lunesBase);
@@ -1604,6 +1612,11 @@ function repHtmlTendencia(data) {
     var ls = repFmtFecha(ld);
     semanas.push({ lunes: ls, label: repFmtCorto(ls) });
   }
+  var sLabels = [];
+  for (var si = 0; si < semanas.length; si++) sLabels.push(semanas[si].lunes);
+  console.log('[REP] Slots gráfico:', sLabels);
+  var wkeys = Object.keys(wstats).sort();
+  console.log('[REP] Semanas en wstats (' + wkeys.length + '):', wkeys);
 
   var W = 460, H = 186, ML = 34, MR = 8, MT = 14, MB = 32;
   var PW = W - ML - MR;
@@ -1663,10 +1676,9 @@ function repHtmlTendencia(data) {
   }
   svg += '</svg>';
 
-  var lunesCurrent = rng.inicio;
-  var lcDate = new Date(lunesCurrent + 'T00:00:00');
-  var lpDate = new Date(lcDate);
-  lpDate.setDate(lcDate.getDate() - 7);
+  var lunesCurrent = repFmtFecha(lunesBase);
+  var lpDate = new Date(lunesBase);
+  lpDate.setDate(lunesBase.getDate() - 7);
   var lunesPrevStr = repFmtFecha(lpDate);
 
   var indicadores = '';
@@ -1720,12 +1732,28 @@ function cargarRepSemanal() {
   document.getElementById('rep-body').innerHTML = '<div class="loading"><div class="spinner"></div>Cargando registros...</div>';
   window.scrollTo(0, 0);
   var ocho = repOchoSemanas();
-  supaFetch('registros?fecha=gte.' + ocho.inicio + '&fecha=lte.' + ocho.fin + '&order=fecha.asc&limit=10000', 'GET')
-    .then(function(res) { return res.json(); })
-    .then(function(data) { renderRepSemanal(data || []); })
-    .catch(function(err) {
-      document.getElementById('rep-body').innerHTML = '<div class="empty"><div class="etxt">Error al cargar: ' + escHtml(err.message) + '</div></div>';
-    });
+  console.log('[REP] Rango consulta:', ocho.inicio, 'a', ocho.fin);
+  var todosDatos = [];
+  var pagSize = 1000;
+  function cargarPagina(offset) {
+    var url = 'registros?fecha=gte.' + ocho.inicio + '&fecha=lte.' + ocho.fin + '&order=fecha.asc&limit=' + pagSize + '&offset=' + offset;
+    supaFetch(url, 'GET')
+      .then(function(res) { return res.json(); })
+      .then(function(pag) {
+        if (!pag) pag = [];
+        for (var i = 0; i < pag.length; i++) todosDatos.push(pag[i]);
+        console.log('[REP] Pág offset=' + offset + ': ' + pag.length + ' filas (total: ' + todosDatos.length + ')');
+        if (pag.length < pagSize) {
+          renderRepSemanal(todosDatos);
+        } else {
+          cargarPagina(offset + pagSize);
+        }
+      })
+      .catch(function(err) {
+        document.getElementById('rep-body').innerHTML = '<div class="empty"><div class="etxt">Error al cargar: ' + escHtml(err.message) + '</div></div>';
+      });
+  }
+  cargarPagina(0);
 }
 
 function renderRepSemanal(data) {
