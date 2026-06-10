@@ -178,6 +178,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
 .rep-pdf-btn:active{background:#F0EBF0}
 .rep-pdf-btn:disabled{opacity:0.35;cursor:default}
 #rep-print-header{display:none}
+.rep-anl-tbl{width:100%;border-collapse:collapse}
+.rep-anl-tbl th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#888780;padding:0 4px 8px;text-align:center}
+.rep-anl-tbl td{font-size:13px;color:#2C2C2A;padding:8px 4px;border-top:1px solid #F1EFE8;text-align:center;vertical-align:middle}
 @media print{
   *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
   html,body{height:auto !important;background:#fff !important}
@@ -189,6 +192,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior
   .rep-card{break-inside:avoid;page-break-inside:avoid;border:1px solid #ddd !important;border-radius:8px !important;margin-bottom:12px !important}
   .rep-zona-tbl tr{break-inside:avoid;page-break-inside:avoid}
   .rep-preg-item{break-inside:avoid;page-break-inside:avoid}
+  .rep-anl-tbl tr{break-inside:avoid;page-break-inside:avoid}
 }
 </style>
 </head>
@@ -1993,9 +1997,100 @@ function renderRepSemanal(data) {
     }
   }
   h += '</div>';
+  h += repHtmlAnalistas(dataSemana, rango);
   el.innerHTML = h;
   if (pdfBtn) pdfBtn.disabled = false;
   window.scrollTo(0, 0);
+}
+
+function repHtmlAnalistas(dataSemana, rango) {
+  var DIAS_LABEL = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  var responsables = ['Angela', 'Felipe'];
+
+  var dias = [];
+  for (var d = 0; d < 7; d++) {
+    var fd = new Date(rango.inicio + 'T00:00:00');
+    fd.setDate(fd.getDate() + d);
+    dias.push({ fecha: repFmtFecha(fd), label: DIAS_LABEL[d] });
+  }
+
+  var hasDomingo = false;
+  for (var i = 0; i < dataSemana.length; i++) {
+    if (dataSemana[i].fecha === dias[6].fecha) { hasDomingo = true; break; }
+  }
+  var diasMostrar = hasDomingo ? 7 : 6;
+
+  var porAnalista = {};
+  for (var i = 0; i < dataSemana.length; i++) {
+    var r = dataSemana[i];
+    if (!r.analista) continue;
+    if (!porAnalista[r.analista]) porAnalista[r.analista] = {};
+    porAnalista[r.analista][r.fecha] = true;
+  }
+
+  var h = '<div class="rep-card"><div class="rep-card-tit">D) Ejecución de la Ruta por Analista</div>';
+  h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#5F5E5A;margin-bottom:10px">Responsables diarios</div>';
+
+  h += '<table class="rep-anl-tbl"><thead><tr><th style="text-align:left">Analista</th>';
+  for (var d = 0; d < diasMostrar; d++) {
+    h += '<th>' + dias[d].label + '</th>';
+  }
+  h += '<th>Cumplimiento</th></tr></thead><tbody>';
+
+  for (var ri = 0; ri < responsables.length; ri++) {
+    var nombre = responsables[ri];
+    var diasReg = porAnalista[nombre] || {};
+    var cuenta = 0;
+    for (var d = 0; d < 6; d++) {
+      if (diasReg[dias[d].fecha]) cuenta++;
+    }
+    var cumColor, cumBg;
+    if (cuenta === 6) { cumColor = '#0F6B47'; cumBg = '#E1F5EE'; }
+    else if (cuenta >= 4) { cumColor = '#BA7517'; cumBg = '#FEF3E2'; }
+    else { cumColor = '#A32D2D'; cumBg = '#FCEBEB'; }
+    h += '<tr><td style="text-align:left;font-weight:600;color:#2C2C2A">' + escHtml(nombre) + '</td>';
+    for (var d = 0; d < diasMostrar; d++) {
+      if (diasReg[dias[d].fecha]) {
+        h += '<td style="color:#0F6B47;font-size:15px;font-weight:700">&#10003;</td>';
+      } else {
+        h += '<td style="color:#D9534F;font-size:13px;opacity:0.6">&#10007;</td>';
+      }
+    }
+    h += '<td><span style="font-size:12px;font-weight:700;color:' + cumColor + ';background:' + cumBg + ';padding:3px 8px;border-radius:8px;white-space:nowrap">' + cuenta + '/6 días</span></td></tr>';
+  }
+  h += '</tbody></table>';
+
+  var anaKeys = Object.keys(porAnalista);
+  var otrosAnl = [];
+  for (var i = 0; i < anaKeys.length; i++) {
+    var esResp = false;
+    for (var j = 0; j < responsables.length; j++) {
+      if (anaKeys[i] === responsables[j]) { esResp = true; break; }
+    }
+    if (!esResp) otrosAnl.push(anaKeys[i]);
+  }
+
+  if (otrosAnl.length > 0) {
+    h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#5F5E5A;margin:16px 0 8px">Otros analistas con actividad</div>';
+    for (var i = 0; i < otrosAnl.length; i++) {
+      var nombre = otrosAnl[i];
+      var diasReg = porAnalista[nombre];
+      var diasStr = '';
+      for (var d = 0; d < diasMostrar; d++) {
+        if (diasReg[dias[d].fecha]) {
+          if (diasStr) diasStr += ', ';
+          diasStr += dias[d].label;
+        }
+      }
+      h += '<div style="font-size:13px;color:#2C2C2A;padding:6px 0;border-top:1px solid #F1EFE8">' +
+        '<span style="font-weight:600">' + escHtml(nombre) + ':</span> ' +
+        '<span style="color:#5F5E5A">' + diasStr + '</span>' +
+      '</div>';
+    }
+  }
+
+  h += '</div>';
+  return h;
 }
 
 function repImprimirPDF() {
