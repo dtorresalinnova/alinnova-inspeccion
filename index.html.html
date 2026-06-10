@@ -1662,18 +1662,50 @@ function renderRepSemanal(data) {
   h += '</div>';
 
   /* ---- C) Detalle de mejoras por pregunta ---- */
-  var pregList = [];
+  // Agrupar preguntas con nok > 0 por línea
+  var pregPorLinea = {};
   var pkeys = Object.keys(porPregunta);
   for (var i = 0; i < pkeys.length; i++) {
     var pd = porPregunta[pkeys[i]];
-    if (pd.nok > 0) pregList.push(pd);
+    if (pd.nok > 0) {
+      if (!pregPorLinea[pd.linea]) pregPorLinea[pd.linea] = [];
+      pregPorLinea[pd.linea].push(pd);
+    }
   }
-  for (var sa = 0; sa < pregList.length - 1; sa++) {
-    for (var sb = sa + 1; sb < pregList.length; sb++) {
-      if (pregList[sb].nok > pregList[sa].nok) {
-        var tmp = pregList[sa]; pregList[sa] = pregList[sb]; pregList[sb] = tmp;
+  // Ordenar preguntas dentro de cada línea: más nok primero
+  for (var i = 0; i < ordenLineas.length; i++) {
+    var lpregs = pregPorLinea[ordenLineas[i]] || [];
+    for (var sa = 0; sa < lpregs.length - 1; sa++) {
+      for (var sb = sa + 1; sb < lpregs.length; sb++) {
+        if (lpregs[sb].nok > lpregs[sa].nok) {
+          var tmp = lpregs[sa]; lpregs[sa] = lpregs[sb]; lpregs[sb] = tmp;
+        }
       }
     }
+    pregPorLinea[ordenLineas[i]] = lpregs;
+  }
+  // Construir bloques de línea solo con nok, ordenados: más nok total primero
+  var bloques = [];
+  for (var i = 0; i < ordenLineas.length; i++) {
+    var ln = ordenLineas[i];
+    var lpregs = pregPorLinea[ln] || [];
+    if (lpregs.length > 0) {
+      var totalNok = 0;
+      for (var j = 0; j < lpregs.length; j++) totalNok += lpregs[j].nok;
+      bloques.push({ linea: ln, pregs: lpregs, totalNok: totalNok });
+    }
+  }
+  for (var sa = 0; sa < bloques.length - 1; sa++) {
+    for (var sb = sa + 1; sb < bloques.length; sb++) {
+      if (bloques[sb].totalNok > bloques[sa].totalNok) {
+        var tmp = bloques[sa]; bloques[sa] = bloques[sb]; bloques[sb] = tmp;
+      }
+    }
+  }
+  // Lista plana en el orden final (para CSV)
+  var pregList = [];
+  for (var i = 0; i < bloques.length; i++) {
+    for (var j = 0; j < bloques[i].pregs.length; j++) pregList.push(bloques[i].pregs[j]);
   }
   REP.pregList = pregList;
 
@@ -1685,27 +1717,31 @@ function renderRepSemanal(data) {
   }
   h += '</div>';
 
-  if (!pregList.length) {
+  if (!bloques.length) {
     h += '<div class="empty" style="padding:24px 0">' + IEMPTY + '<div class="etxt">Sin incumplimientos esta semana.</div></div>';
   } else {
-    for (var i = 0; i < pregList.length; i++) {
-      var pd = pregList[i];
-      var ptotal = pd.ok + pd.nok;
-      var ppct = ptotal > 0 ? Math.round(pd.ok / ptotal * 100) : 0;
-      var pcol = repPctColor(ppct);
-      var pbg = repPctBg(ppct);
-      var borderBottom = (i < pregList.length - 1) ? 'border-bottom:1px solid #F1EFE8;' : '';
-      h += '<div style="padding:12px 0;' + borderBottom + '">' +
-        '<div style="display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:5px">' +
-          '<div style="font-size:13px;font-weight:600;color:#2C2C2A;-webkit-flex:1;flex:1;padding-right:10px;line-height:1.4">' + escHtml(pd.pregunta) + '</div>' +
-          '<span style="font-size:13px;font-weight:700;color:' + pcol + ';background:' + pbg + ';padding:3px 8px;border-radius:8px;flex-shrink:0">' + ppct + '%</span>' +
-        '</div>' +
-        '<div style="font-size:11px;color:#888780;margin-bottom:5px">' + escHtml(pd.linea) + ' &mdash; ' + escHtml(pd.zona) + '</div>' +
-        '<div style="display:-webkit-flex;display:flex;gap:14px;font-size:12px">' +
-          '<span style="color:#0F6B47;font-weight:600">&#10003; Cumplen: ' + pd.ok + '</span>' +
-          '<span style="color:#A32D2D;font-weight:600">&#10007; No cumplen: ' + pd.nok + '</span>' +
-        '</div>' +
-      '</div>';
+    for (var i = 0; i < bloques.length; i++) {
+      var bloque = bloques[i];
+      h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#3D1F3D;background:#F0EBF0;padding:7px 12px;border-radius:8px;margin:' + (i === 0 ? '0' : '16px') + ' 0 10px">' + escHtml(bloque.linea) + '</div>';
+      for (var j = 0; j < bloque.pregs.length; j++) {
+        var pd = bloque.pregs[j];
+        var ptotal = pd.ok + pd.nok;
+        var ppct = ptotal > 0 ? Math.round(pd.ok / ptotal * 100) : 0;
+        var pcol = repPctColor(ppct);
+        var pbg = repPctBg(ppct);
+        var borderBottom = (j < bloque.pregs.length - 1) ? 'border-bottom:1px solid #F1EFE8;' : '';
+        h += '<div style="padding:12px 0;' + borderBottom + '">' +
+          '<div style="display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:5px">' +
+            '<div style="font-size:13px;font-weight:600;color:#2C2C2A;-webkit-flex:1;flex:1;padding-right:10px;line-height:1.4">' + escHtml(pd.pregunta) + '</div>' +
+            '<span style="font-size:13px;font-weight:700;color:' + pcol + ';background:' + pbg + ';padding:3px 8px;border-radius:8px;flex-shrink:0">' + ppct + '%</span>' +
+          '</div>' +
+          '<div style="font-size:11px;color:#888780;margin-bottom:5px">' + escHtml(pd.zona) + '</div>' +
+          '<div style="display:-webkit-flex;display:flex;gap:14px;font-size:12px">' +
+            '<span style="color:#0F6B47;font-weight:600">&#10003; Cumplen: ' + pd.ok + '</span>' +
+            '<span style="color:#A32D2D;font-weight:600">&#10007; No cumplen: ' + pd.nok + '</span>' +
+          '</div>' +
+        '</div>';
+      }
     }
   }
   h += '</div>';
